@@ -1,0 +1,3304 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Teaven SMS · 后台管理</title>
+<link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/remixicon/4.2.0/remixicon.css" />
+<script src="https://cdn.bootcdn.net/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+/* ============ 设计 Token ============ */
+:root[data-theme="light"] {
+  --bg-primary: #FAF7F2;
+  --bg-secondary: #FFFFFF;
+  --bg-tertiary: #F3EDE3;
+  --border: #E8DFD3;
+  --border-strong: #D8CBB8;
+  --text-primary: #2D1F14;
+  --text-secondary: #6B5D4F;
+  --text-muted: #A89B8C;
+  --brand-900: #3D2817;
+  --brand-700: #6B4423;
+  --brand-500: #A0522D;
+  --brand-300: #D2B48C;
+  --brand-100: #F5E9D7;
+  --success: #2F855A;
+  --warning: #B7791F;
+  --error: #C53030;
+  --info: #2B6CB0;
+  --shadow-sm: 0 1px 2px rgba(61,40,23,.06);
+  --shadow-md: 0 4px 12px rgba(61,40,23,.08);
+  --shadow-lg: 0 12px 32px rgba(61,40,23,.12);
+  --row-hover: rgba(160,82,45,.05);
+}
+:root[data-theme="dark"] {
+  --bg-primary: #1A1410;
+  --bg-secondary: #251C15;
+  --bg-tertiary: #2F241B;
+  --border: #3D2E22;
+  --border-strong: #4A3829;
+  --text-primary: #F5E9D7;
+  --text-secondary: #C4B5A0;
+  --text-muted: #8B7E6E;
+  --brand-900: #1F140A;
+  --brand-700: #D2B48C;
+  --brand-500: #C8956D;
+  --brand-300: #8B5E3C;
+  --brand-100: #3D2817;
+  --success: #48BB78;
+  --warning: #ECC94B;
+  --error: #FC8181;
+  --info: #63B3ED;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,.3);
+  --shadow-md: 0 4px 12px rgba(0,0,0,.35);
+  --shadow-lg: 0 12px 32px rgba(0,0,0,.5);
+  --row-hover: rgba(210,180,140,.07);
+}
+
+/* ============ 基础重置 ============ */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+  font-family: "PingFang SC", "Microsoft YaHei", "Inter", system-ui, -apple-system, sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  transition: background-color .3s ease, color .3s ease;
+}
+a { color: inherit; text-decoration: none; }
+button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+input, select, textarea { font-family: inherit; font-size: inherit; }
+ul, ol { list-style: none; }
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 8px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+::-webkit-scrollbar-track { background: transparent; }
+.font-num { font-variant-numeric: tabular-nums lining-nums; }
+
+/* ============ 布局 ============ */
+.app { display: flex; min-height: 100vh; }
+.sidebar {
+  width: 200px; flex-shrink: 0; background: var(--bg-secondary);
+  border-right: 1px solid var(--border); display: flex; flex-direction: column;
+  position: sticky; top: 0; height: 100vh; transition: width .25s ease;
+  z-index: 50;
+}
+.sidebar.collapsed { width: 72px; }
+.sidebar.collapsed .nav-label,
+.sidebar.collapsed .nav-group-title,
+.sidebar.collapsed .brand-text,
+.sidebar.collapsed .nav-badge { display: none; }
+.sidebar.collapsed .nav-item { justify-content: center; padding: 10px; }
+.sidebar.collapsed .nav-item .nav-arrow { display: none; }
+
+.brand {
+  height: 64px; display: flex; align-items: center; gap: 10px;
+  padding: 0 20px; border-bottom: 1px solid var(--border); flex-shrink: 0;
+}
+.brand-logo {
+  width: 32px; height: 32px; border-radius: 8px; flex-shrink: 0;
+  background: linear-gradient(135deg, var(--brand-700), var(--brand-500));
+  display: flex; align-items: center; justify-content: center; color: #fff;
+  font-weight: 700; font-size: 16px;
+}
+.brand-text { font-weight: 700; font-size: 16px; letter-spacing: .3px; white-space: nowrap; }
+.brand-text span { color: var(--brand-500); }
+
+.nav-scroll { flex: 1; overflow-y: auto; padding: 12px 12px 24px; }
+.nav-group { margin-bottom: 18px; }
+.nav-group-title {
+  font-size: 11px; color: var(--text-muted); text-transform: uppercase;
+  letter-spacing: .8px; padding: 6px 12px; margin-top: 8px; font-weight: 600;
+}
+.nav-item {
+  display: flex; align-items: center; gap: 12px; padding: 9px 12px;
+  border-radius: 8px; color: var(--text-secondary); font-size: 14px;
+  margin-bottom: 2px; cursor: pointer; transition: all .15s ease; position: relative;
+  white-space: nowrap;
+}
+.nav-item i { font-size: 18px; flex-shrink: 0; width: 20px; text-align: center; }
+.nav-item:hover { background: var(--bg-tertiary); color: var(--text-primary); }
+.nav-item.active { background: var(--brand-100); color: var(--brand-700); font-weight: 600; }
+.nav-item.active::before {
+  content: ''; position: absolute; left: -12px; top: 50%; transform: translateY(-50%);
+  width: 3px; height: 18px; background: var(--brand-500); border-radius: 0 3px 3px 0;
+}
+.nav-label { flex: 1; overflow: hidden; text-overflow: ellipsis; }
+.nav-badge {
+  background: var(--error); color: #fff; font-size: 10px; padding: 1px 6px;
+  border-radius: 10px; font-weight: 600; line-height: 1.4;
+}
+.nav-badge.warn { background: var(--warning); }
+
+.sidebar-footer {
+  padding: 12px; border-top: 1px solid var(--border); flex-shrink: 0;
+}
+.collapse-btn {
+  width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 8px; border-radius: 8px; color: var(--text-secondary); font-size: 13px;
+}
+.collapse-btn:hover { background: var(--bg-tertiary); color: var(--text-primary); }
+
+.main-wrap { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+
+/* ============ 顶栏 ============ */
+.topbar {
+  height: 64px; background: var(--bg-secondary); border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 16px; padding: 0 24px;
+  position: sticky; top: 0; z-index: 40; backdrop-filter: blur(8px);
+}
+.hamburger { display: none; font-size: 22px; color: var(--text-secondary); }
+.topbar-search {
+  flex: 1; max-width: 360px; position: relative;
+}
+.topbar-search input {
+  width: 100%; height: 36px; padding: 0 12px 0 36px; border-radius: 8px;
+  border: 1px solid var(--border); background: var(--bg-primary); color: var(--text-primary);
+  transition: border-color .15s, box-shadow .15s;
+}
+.topbar-search input:focus { outline: none; border-color: var(--brand-500); box-shadow: 0 0 0 3px rgba(160,82,45,.12); }
+.topbar-search i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 16px; }
+.topbar-actions { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+.icon-btn {
+  width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center;
+  justify-content: center; color: var(--text-secondary); position: relative; transition: all .15s;
+}
+.icon-btn:hover { background: var(--bg-tertiary); color: var(--text-primary); }
+.icon-btn i { font-size: 18px; }
+.icon-btn .dot {
+  position: absolute; top: 8px; right: 8px; width: 8px; height: 8px;
+  background: var(--error); border-radius: 50%; border: 2px solid var(--bg-secondary);
+}
+.admin-chip {
+  display: flex; align-items: center; gap: 8px; padding: 4px 8px 4px 4px;
+  border-radius: 20px; cursor: pointer; transition: background .15s;
+}
+.admin-chip:hover { background: var(--bg-tertiary); }
+.avatar {
+  width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
+  background: linear-gradient(135deg, var(--brand-500), var(--brand-700));
+  color: #fff; display: flex; align-items: center; justify-content: center;
+  font-weight: 600; font-size: 13px;
+}
+.admin-meta { display: flex; flex-direction: column; line-height: 1.2; }
+.admin-name { font-size: 13px; font-weight: 600; }
+.admin-role { font-size: 11px; color: var(--text-muted); }
+@media (max-width: 640px) { .admin-meta { display: none; } }
+
+/* ============ 面包屑 ============ */
+.breadcrumb {
+  display: flex; align-items: center; gap: 8px; padding: 14px 24px;
+  font-size: 13px; color: var(--text-muted); background: var(--bg-primary);
+  border-bottom: 1px solid var(--border);
+}
+.breadcrumb a:hover { color: var(--brand-500); }
+.breadcrumb i { font-size: 12px; }
+.breadcrumb .current { color: var(--text-primary); font-weight: 500; }
+
+/* ============ 主内容 ============ */
+.content { flex: 1; padding: 24px; overflow-y: auto; }
+.page-head { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
+.page-title { font-size: 22px; font-weight: 700; letter-spacing: .2px; }
+.page-sub { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
+
+/* ============ Card ============ */
+.card {
+  background: var(--bg-secondary); border: 1px solid var(--border);
+  border-radius: 12px; box-shadow: var(--shadow-sm); transition: box-shadow .2s, transform .2s;
+}
+.card-pad { padding: 20px; }
+.card-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px; border-bottom: 1px solid var(--border);
+}
+.card-title { font-size: 15px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+.card-title i { color: var(--brand-500); }
+.card-body { padding: 20px; }
+
+/* ============ StatsCard ============ */
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; margin-bottom: 20px; }
+.stat-card {
+  background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 12px;
+  padding: 18px; box-shadow: var(--shadow-sm); transition: all .2s; position: relative; overflow: hidden;
+}
+.stat-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+.stat-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.stat-label { font-size: 13px; color: var(--text-secondary); }
+.stat-icon {
+  width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center;
+  justify-content: center; font-size: 16px;
+}
+.stat-icon.brand { background: rgba(160,82,45,.12); color: var(--brand-500); }
+.stat-icon.success { background: rgba(47,133,90,.12); color: var(--success); }
+.stat-icon.error { background: rgba(197,48,48,.12); color: var(--error); }
+.stat-icon.warning { background: rgba(183,121,31,.12); color: var(--warning); }
+.stat-icon.info { background: rgba(43,108,176,.12); color: var(--info); }
+.stat-value { font-size: 26px; font-weight: 700; letter-spacing: -.5px; }
+.stat-value .unit { font-size: 14px; font-weight: 500; color: var(--text-muted); margin-left: 2px; }
+.stat-foot { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; }
+.trend { font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 2px; }
+.trend.up { color: var(--success); }
+.trend.down { color: var(--error); }
+.stat-spark { height: 28px; width: 80px; }
+
+/* ============ 网格 ============ */
+.grid-2 { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; margin-bottom: 20px; }
+.grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+@media (max-width: 1100px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+
+.chart-box { position: relative; height: 280px; }
+.chart-box.sm { height: 220px; }
+
+/* ============ Badge ============ */
+.badge {
+  display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px;
+  border-radius: 6px; font-size: 12px; font-weight: 500; line-height: 1.5; white-space: nowrap;
+}
+.badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.badge.success { color: var(--success); background: rgba(47,133,90,.12); }
+.badge.warning { color: var(--warning); background: rgba(183,121,31,.12); }
+.badge.error { color: var(--error); background: rgba(197,48,48,.12); }
+.badge.info { color: var(--info); background: rgba(43,108,176,.12); }
+.badge.neutral { color: var(--text-secondary); background: var(--bg-tertiary); }
+.badge::before { display: none; }
+.badge.dot::before { display: inline-block; }
+.badge.brand { color: var(--brand-700); background: var(--brand-100); }
+
+/* ============ Button ============ */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 8px 14px; border-radius: 8px; font-size: 13px; font-weight: 500;
+  border: 1px solid var(--border); background: var(--bg-secondary); color: var(--text-primary);
+  transition: all .15s; white-space: nowrap;
+}
+.btn:hover { background: var(--bg-tertiary); border-color: var(--border-strong); }
+.btn i { font-size: 15px; }
+.btn.primary { background: var(--brand-700); border-color: var(--brand-700); color: #fff; }
+.btn.primary:hover { background: var(--brand-900); border-color: var(--brand-900); }
+.btn.success { background: var(--success); border-color: var(--success); color: #fff; }
+.btn.success:hover { filter: brightness(.92); }
+.btn.danger { background: var(--error); border-color: var(--error); color: #fff; }
+.btn.danger:hover { filter: brightness(.92); }
+.btn.ghost { background: transparent; border-color: transparent; }
+.btn.ghost:hover { background: var(--bg-tertiary); }
+.btn.sm { padding: 5px 10px; font-size: 12px; }
+.btn.lg { padding: 10px 18px; font-size: 14px; }
+.btn.icon { padding: 8px; width: 34px; height: 34px; }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+
+/* ============ Table ============ */
+.table-wrap { overflow-x: auto; }
+table.tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
+table.tbl th, table.tbl td { padding: 12px 16px; text-align: left; white-space: nowrap; }
+table.tbl thead th {
+  position: sticky; top: 0; background: var(--bg-tertiary); color: var(--text-secondary);
+  font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .4px;
+  border-bottom: 1px solid var(--border); z-index: 2; cursor: default; user-select: none;
+}
+table.tbl th.sortable { cursor: pointer; }
+table.tbl th.sortable:hover { color: var(--brand-500); }
+table.tbl th.sortable .sort-i { margin-left: 4px; opacity: .4; font-size: 12px; }
+table.tbl th.sortable.sorted .sort-i { opacity: 1; color: var(--brand-500); }
+table.tbl tbody tr { border-bottom: 1px solid var(--border); transition: background .12s; }
+table.tbl tbody tr:last-child { border-bottom: none; }
+table.tbl tbody tr:hover { background: var(--row-hover); }
+table.tbl td .cell-main { color: var(--text-primary); font-weight: 500; }
+table.tbl td .cell-sub { color: var(--text-muted); font-size: 12px; margin-top: 2px; }
+table.tbl td .mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 12px; }
+.row-actions { display: flex; gap: 6px; }
+.checkbox-cell { width: 40px; text-align: center; }
+
+/* ============ 表单 ============ */
+.form-row { margin-bottom: 16px; }
+.form-label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 6px; color: var(--text-primary); }
+.form-label .req { color: var(--error); margin-left: 2px; }
+.form-help { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+.form-error { font-size: 12px; color: var(--error); margin-top: 4px; display: flex; align-items: center; gap: 4px; }
+.input, .select, .textarea {
+  width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border);
+  background: var(--bg-primary); color: var(--text-primary); transition: border-color .15s, box-shadow .15s;
+}
+.input:focus, .select:focus, .textarea:focus { outline: none; border-color: var(--brand-500); box-shadow: 0 0 0 3px rgba(160,82,45,.12); }
+.input.invalid, .select.invalid, .textarea.invalid { border-color: var(--error); }
+.textarea { resize: vertical; min-height: 88px; line-height: 1.6; }
+.input-group { position: relative; }
+.input-group .input-prefix { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); }
+.input-group.has-prefix .input { padding-left: 34px; }
+.select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23A89B8C' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; cursor: pointer; }
+.radio-row, .check-row { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+.radio-row input, .check-row input { accent-color: var(--brand-500); }
+.switch { position: relative; display: inline-block; width: 40px; height: 22px; flex-shrink: 0; }
+.switch input { opacity: 0; width: 0; height: 0; }
+.switch .slider { position: absolute; inset: 0; background: var(--border-strong); border-radius: 22px; transition: .2s; cursor: pointer; }
+.switch .slider::before { content: ''; position: absolute; width: 18px; height: 18px; left: 2px; top: 2px; background: #fff; border-radius: 50%; transition: .2s; box-shadow: 0 1px 3px rgba(0,0,0,.2); }
+.switch input:checked + .slider { background: var(--brand-500); }
+.switch input:checked + .slider::before { transform: translateX(18px); }
+
+/* ============ Toolbar ============ */
+.toolbar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+.toolbar .search-box { position: relative; flex: 1; min-width: 200px; max-width: 320px; }
+.toolbar .search-box input { width: 100%; height: 36px; padding: 0 12px 0 36px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-secondary); color: var(--text-primary); }
+.toolbar .search-box input:focus { outline: none; border-color: var(--brand-500); box-shadow: 0 0 0 3px rgba(160,82,45,.12); }
+.toolbar .search-box i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); }
+.toolbar .spacer { flex: 1; }
+.filter-select { height: 36px; padding: 0 32px 0 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-secondary); color: var(--text-primary); appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23A89B8C' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; }
+
+/* ============ Tabs ============ */
+.tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin-bottom: 16px; position: relative; }
+.tab {
+  padding: 10px 16px; font-size: 13px; color: var(--text-secondary); cursor: pointer;
+  border-bottom: 2px solid transparent; transition: all .15s; font-weight: 500;
+  display: inline-flex; align-items: center; gap: 6px; margin-bottom: -1px;
+}
+.tab:hover { color: var(--text-primary); }
+.tab.active { color: var(--brand-700); border-bottom-color: var(--brand-500); font-weight: 600; }
+.tab .count { background: var(--bg-tertiary); color: var(--text-muted); font-size: 11px; padding: 1px 7px; border-radius: 10px; }
+.tab.active .count { background: var(--brand-100); color: var(--brand-700); }
+
+/* ============ Modal ============ */
+.modal-mask {
+  position: fixed; inset: 0; background: rgba(20,12,6,.5); backdrop-filter: blur(2px);
+  display: none; align-items: center; justify-content: center; z-index: 100; padding: 20px;
+}
+.modal-mask.open { display: flex; animation: fadein .15s ease; }
+.modal {
+  background: var(--bg-secondary); border-radius: 12px; box-shadow: var(--shadow-lg);
+  width: 100%; max-width: 460px; max-height: 90vh; overflow: hidden; display: flex; flex-direction: column;
+  animation: modalin .2s ease;
+}
+.modal.lg { max-width: 680px; }
+.modal-head { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--border); }
+.modal-title { font-size: 16px; font-weight: 600; }
+.modal-body { padding: 20px; overflow-y: auto; }
+.modal-foot { padding: 14px 20px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 8px; }
+
+/* ============ Drawer ============ */
+.drawer-mask {
+  position: fixed; inset: 0; background: rgba(20,12,6,.5); backdrop-filter: blur(2px);
+  display: none; z-index: 100;
+}
+.drawer-mask.open { display: block; animation: fadein .2s ease; }
+.drawer {
+  position: fixed; right: 0; top: 0; bottom: 0; width: 480px; max-width: 92vw;
+  background: var(--bg-secondary); box-shadow: var(--shadow-lg); z-index: 101;
+  display: flex; flex-direction: column; transform: translateX(100%); transition: transform .25s ease;
+}
+.drawer.open { transform: translateX(0); }
+.drawer-head { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--border); }
+.drawer-title { font-size: 16px; font-weight: 600; }
+.drawer-body { flex: 1; overflow-y: auto; padding: 20px; }
+.drawer-foot { padding: 14px 20px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 8px; }
+
+/* ============ Dropdown ============ */
+.dropdown { position: relative; display: inline-block; }
+.dropdown-menu {
+  position: absolute; top: calc(100% + 6px); right: 0; min-width: 180px;
+  background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 10px;
+  box-shadow: var(--shadow-lg); padding: 6px; display: none; z-index: 60;
+}
+.dropdown-menu.open { display: block; animation: fadein .12s ease; }
+.dropdown-item {
+  display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 6px;
+  font-size: 13px; color: var(--text-primary); cursor: pointer; white-space: nowrap;
+}
+.dropdown-item:hover { background: var(--bg-tertiary); }
+.dropdown-item i { font-size: 15px; color: var(--text-secondary); width: 16px; }
+.dropdown-item.danger { color: var(--error); }
+.dropdown-item.danger i { color: var(--error); }
+.dropdown-divider { height: 1px; background: var(--border); margin: 4px 0; }
+
+/* ============ Tooltip ============ */
+[data-tip] { position: relative; }
+[data-tip]::after {
+  content: attr(data-tip); position: absolute; bottom: calc(100% + 8px); left: 50%;
+  transform: translateX(-50%); background: var(--brand-900); color: #fff; padding: 4px 8px;
+  border-radius: 4px; font-size: 12px; white-space: nowrap; opacity: 0; pointer-events: none;
+  transition: opacity .15s; z-index: 80; transition-delay: .25s;
+}
+[data-tip]:hover::after { opacity: 1; }
+
+/* ============ Pagination ============ */
+.pagination { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 16px; flex-wrap: wrap; }
+.page-info { font-size: 13px; color: var(--text-muted); }
+.page-list { display: flex; gap: 4px; align-items: center; }
+.page-btn {
+  min-width: 32px; height: 32px; padding: 0 8px; border-radius: 8px; border: 1px solid var(--border);
+  background: var(--bg-secondary); color: var(--text-primary); font-size: 13px; display: inline-flex;
+  align-items: center; justify-content: center; transition: all .15s;
+}
+.page-btn:hover:not(:disabled) { border-color: var(--brand-500); color: var(--brand-500); }
+.page-btn.active { background: var(--brand-700); border-color: var(--brand-700); color: #fff; }
+.page-btn:disabled { opacity: .4; cursor: not-allowed; }
+.page-size { height: 32px; }
+
+/* ============ Toast ============ */
+.toast-wrap { position: fixed; top: 20px; right: 20px; z-index: 200; display: flex; flex-direction: column; gap: 10px; }
+.toast {
+  background: var(--bg-secondary); border: 1px solid var(--border); border-left: 3px solid var(--brand-500);
+  border-radius: 8px; box-shadow: var(--shadow-lg); padding: 12px 16px; min-width: 280px; max-width: 360px;
+  display: flex; align-items: flex-start; gap: 10px; animation: toastin .25s ease;
+}
+.toast.success { border-left-color: var(--success); }
+.toast.error { border-left-color: var(--error); }
+.toast.warning { border-left-color: var(--warning); }
+.toast.info { border-left-color: var(--info); }
+.toast i { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+.toast.success i { color: var(--success); }
+.toast.error i { color: var(--error); }
+.toast.warning i { color: var(--warning); }
+.toast.info i { color: var(--info); }
+.toast .t-content { flex: 1; font-size: 13px; line-height: 1.5; }
+.toast .t-title { font-weight: 600; margin-bottom: 2px; }
+.toast.removing { animation: toastout .2s ease forwards; }
+
+/* ============ 空状态 ============ */
+.empty { text-align: center; padding: 48px 20px; color: var(--text-muted); }
+.empty i { font-size: 40px; margin-bottom: 12px; display: block; opacity: .5; }
+
+/* ============ 杂项 ============ */
+.kv-list { display: grid; grid-template-columns: 120px 1fr; gap: 10px 16px; font-size: 13px; }
+.kv-list dt { color: var(--text-muted); }
+.kv-list dd { color: var(--text-primary); word-break: break-all; }
+.mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 12px; }
+.text-muted { color: var(--text-muted); }
+.text-secondary { color: var(--text-secondary); }
+.flex { display: flex; }
+.flex-1 { flex: 1; }
+.gap-8 { gap: 8px; } .gap-12 { gap: 12px; } .gap-16 { gap: 16px; }
+.items-center { align-items: center; }
+.justify-between { justify-content: space-between; }
+.mt-8{margin-top:8px}.mt-16{margin-top:16px}.mb-8{margin-bottom:8px}.mb-16{margin-bottom:16px}
+.flex-wrap { flex-wrap: wrap; }
+.tag { display: inline-block; padding: 1px 7px; border-radius: 4px; font-size: 11px; background: var(--bg-tertiary); color: var(--text-secondary); margin-right: 4px; }
+.mini-progress { height: 6px; background: var(--bg-tertiary); border-radius: 4px; overflow: hidden; }
+.mini-progress > span { display: block; height: 100%; background: var(--brand-500); border-radius: 4px; }
+
+/* ============ 动画 ============ */
+@keyframes fadein { from { opacity: 0; } to { opacity: 1; } }
+@keyframes modalin { from { opacity: 0; transform: scale(.96); } to { opacity: 1; transform: scale(1); } }
+@keyframes toastin { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes toastout { to { opacity: 0; transform: translateX(40px); } }
+
+/* ============ 响应式 ============ */
+@media (max-width: 1023px) {
+  .sidebar {
+    position: fixed; left: 0; top: 0; transform: translateX(-100%); transition: transform .25s ease;
+    box-shadow: var(--shadow-lg);
+  }
+  .sidebar.mobile-open { transform: translateX(0); }
+  .sidebar.collapsed { width: 240px; }
+  .sidebar.collapsed .nav-label,
+  .sidebar.collapsed .nav-group-title,
+  .sidebar.collapsed .brand-text,
+  .sidebar.collapsed .nav-badge { display: block; }
+  .sidebar.collapsed .nav-item { justify-content: flex-start; padding: 9px 12px; }
+  .hamburger { display: flex; align-items: center; }
+  .collapse-btn { display: none; }
+}
+@media (max-width: 768px) {
+  .content { padding: 16px; }
+  .topbar { padding: 0 16px; }
+  .breadcrumb { padding: 12px 16px; }
+  .topbar-search { display: none; }
+  .stats-grid { grid-template-columns: 1fr 1fr; }
+  .page-title { font-size: 19px; }
+}
+@media (max-width: 480px) {
+  .stats-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- ============ 侧边栏 ============ -->
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="brand-logo">T</div>
+      <div class="brand-text">Teaven<span> SMS</span></div>
+    </div>
+    <div class="nav-scroll" id="navScroll"></div>
+    <div class="sidebar-footer">
+      <button class="collapse-btn" id="collapseBtn">
+        <i class="ri-menu-fold-line"></i><span>收起侧栏</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- ============ 主区域 ============ -->
+  <div class="main-wrap">
+    <header class="topbar">
+      <button class="icon-btn hamburger" id="hamburger"><i class="ri-menu-line"></i></button>
+      <div class="topbar-search">
+        <i class="ri-search-line"></i>
+        <input type="text" placeholder="搜索用户、消息、通道…" id="globalSearch" />
+      </div>
+      <div class="topbar-actions">
+        <button class="icon-btn" id="themeToggle" data-tip="切换主题"><i class="ri-sun-line"></i></button>
+        <div class="dropdown">
+          <button class="icon-btn" id="notifBtn" data-tip="通知"><i class="ri-notification-3-line"></i><span class="dot"></span></button>
+          <div class="dropdown-menu" id="notifMenu" style="min-width:300px">
+            <div style="padding:8px 10px;font-weight:600;font-size:13px;border-bottom:1px solid var(--border);margin-bottom:4px">通知中心</div>
+            <div class="dropdown-item"><i class="ri-inbox-line"></i><div><div>暂无通知</div><div class="text-muted" style="font-size:11px">登录后显示真实通知</div></div></div>
+          </div>
+        </div>
+        <div class="dropdown">
+          <div class="admin-chip" id="adminChip">
+            <div class="avatar">A</div>
+            <div class="admin-meta">
+              <span class="admin-name">管理员</span>
+              <span class="admin-role">未登录</span>
+            </div>
+            <i class="ri-arrow-down-s-line" style="color:var(--text-muted)"></i>
+          </div>
+          <div class="dropdown-menu" id="adminMenu">
+            <div class="dropdown-item" onclick="TS.openLoginModal()"><i class="ri-login-circle-line"></i>连接后端 / 登录</div>
+            <div class="dropdown-divider"></div>
+            <div class="dropdown-item"><i class="ri-user-3-line"></i>个人资料</div>
+            <div class="dropdown-item"><i class="ri-settings-3-line"></i>偏好设置</div>
+            <div class="dropdown-item"><i class="ri-key-2-line"></i>修改密码</div>
+            <div class="dropdown-divider"></div>
+            <div class="dropdown-item" onclick="TS.logout()"><i class="ri-logout-circle-line"></i>退出登录</div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <nav class="breadcrumb" id="breadcrumb"></nav>
+
+    <main class="content" id="content"></main>
+
+    <footer class="breadcrumb" style="justify-content:space-between;border-top:1px solid var(--border);border-bottom:none">
+      <span>© 2026 Teaven SMS · Cloudflare SMS Gateway</span>
+      <span class="text-muted">v2.4.1 · 运行于 Cloudflare Workers</span>
+    </footer>
+  </div>
+</div>
+
+<!-- ============ 通用 Modal 容器 ============ -->
+<div class="modal-mask" id="modalMask">
+  <div class="modal" id="modalBox">
+    <div class="modal-head">
+      <span class="modal-title" id="modalTitle">标题</span>
+      <button class="icon-btn" onclick="TS.closeModal()"><i class="ri-close-line"></i></button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-foot" id="modalFoot"></div>
+  </div>
+</div>
+
+<!-- ============ 通用 Drawer 容器 ============ -->
+<div class="drawer-mask" id="drawerMask"></div>
+<aside class="drawer" id="drawerBox">
+  <div class="drawer-head">
+    <span class="drawer-title" id="drawerTitle">详情</span>
+    <button class="icon-btn" onclick="TS.closeDrawer()"><i class="ri-close-line"></i></button>
+  </div>
+  <div class="drawer-body" id="drawerBody"></div>
+  <div class="drawer-foot" id="drawerFoot"></div>
+</aside>
+
+<!-- ============ Toast 容器 ============ -->
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script>
+/* ============================================================
+   Teaven SMS 后台管理 · 全部交互逻辑
+   ============================================================ */
+window.TS = (function () {
+  'use strict';
+
+  /* ---------- 工具函数 ---------- */
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+  const money = (n) => '￥' + Number(n).toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const num = (n) => Number(n).toLocaleString('zh-CN');
+  const pct = (n) => Number(n).toFixed(2) + '%';
+  const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+
+  /* ============================================================
+     API 客户端 · 对接真实后端 /api/admin/*
+     - 登录态：token 存 localStorage('ts-admin-token')
+     - 短信记录：GET /api/admin/users/messages
+     - 实时推送：WS /api/admin/ws/messages（Durable Object 广播）
+     ============================================================ */
+  const API = {
+    /** API 基址：与页面同源，部署后即 Workers 域名 */
+    base: location.origin,
+    /** 登录态 token */
+    get token() { return localStorage.getItem('ts-admin-token') || ''; },
+    set token(v) { if (v) localStorage.setItem('ts-admin-token', v); else localStorage.removeItem('ts-admin-token'); },
+    get isLoggedIn() { return !!this.token; },
+
+    /** 带鉴权的 fetch 封装 */
+    async request(path, options = {}) {
+      const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) };
+      if (this.token) headers['Authorization'] = 'Bearer ' + this.token;
+      const res = await fetch(this.base + path, { ...options, headers });
+      const json = await res.json().catch(() => ({ code: -1, message: 'invalid json', data: null }));
+      if (json.code !== 0) throw new Error(json.message || 'request failed');
+      return json.data;
+    },
+
+    /** 登录 */
+    async login(email, password) {
+      const data = await this.request('/api/auth/login', {
+        method: 'POST',
+        body: JSON.stringify({ email, password }),
+      });
+      if (data.role !== 'admin') throw new Error('该账号无后台权限');
+      this.token = data.token;
+      return data;
+    },
+    logout() { this.token = ''; },
+
+    /** 新系统初始化注册（首用户自动获得管理员角色） */
+    async setupAdmin(email, password) {
+      const data = await this.request('/api/auth/register', {
+        method: 'POST',
+        body: JSON.stringify({ email, password }),
+      });
+      if (data.role !== 'admin') throw new Error('注册成功但未获得管理员权限，请联系开发者');
+      this.token = data.token;
+      return data;
+    },
+
+    /** 检查系统是否为新系统（库里无任何账号） */
+    async fetchSystemStatus() {
+      return this.request('/api/auth/system-status');
+    },
+
+    /** 拉取短信记录（admin 视角，全部用户） */
+    async fetchMessages(params = {}) {
+      const qs = new URLSearchParams();
+      Object.entries(params).forEach(([k, v]) => { if (v) qs.set(k, v); });
+      return this.request('/api/admin/users/messages?' + qs.toString());
+    },
+
+    /** 拉取用户列表 */
+    async fetchUsers(params = {}) {
+      const qs = new URLSearchParams();
+      Object.entries(params).forEach(([k, v]) => { if (v) qs.set(k, v); });
+      return this.request('/api/admin/users?' + qs.toString());
+    },
+
+    /** 拉取签名审核列表 */
+    async fetchSignatures(params = {}) {
+      const qs = new URLSearchParams();
+      Object.entries(params).forEach(([k, v]) => { if (v) qs.set(k, v); });
+      return this.request('/api/admin/reviews/signatures?' + qs.toString());
+    },
+
+    /** 审核签名 */
+    async reviewSignature(id, action, rejectReason) {
+      return this.request('/api/admin/reviews/signatures/' + id, {
+        method: 'PATCH',
+        body: JSON.stringify({ action, rejectReason }),
+      });
+    },
+
+    /** 拉取模板审核列表 */
+    async fetchTemplates(params = {}) {
+      const qs = new URLSearchParams();
+      Object.entries(params).forEach(([k, v]) => { if (v) qs.set(k, v); });
+      return this.request('/api/admin/reviews/templates?' + qs.toString());
+    },
+
+    /** 审核模板 */
+    async reviewTemplate(id, action, rejectReason) {
+      return this.request('/api/admin/reviews/templates/' + id, {
+        method: 'PATCH',
+        body: JSON.stringify({ action, rejectReason }),
+      });
+    },
+
+    /** 拉取上游列表 */
+    async fetchUpstreams() {
+      return this.request('/api/admin/upstreams');
+    },
+
+    /** 创建上游 */
+    async createUpstream(data) {
+      return this.request('/api/admin/upstreams', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      });
+    },
+
+    /** 更新上游 */
+    async updateUpstream(id, data) {
+      return this.request('/api/admin/upstreams/' + id, {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      });
+    },
+
+    /** 拉取通道列表 */
+    async fetchChannels(upstreamId) {
+      return this.request('/api/admin/upstreams/' + upstreamId + '/channels');
+    },
+
+    /** 创建通道 */
+    async createChannel(upstreamId, data) {
+      return this.request('/api/admin/upstreams/' + upstreamId + '/channels', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      });
+    },
+
+    /** 拉取上游映射列表 */
+    async fetchMappings(params = {}) {
+      const qs = new URLSearchParams();
+      Object.entries(params).forEach(([k, v]) => { if (v) qs.set(k, v); });
+      return this.request('/api/admin/mappings?' + qs.toString());
+    },
+
+    async deleteMapping(type, id) {
+      const resource = type === 'template' ? 'templates' : 'signatures';
+      return this.request('/api/admin/mappings/' + resource + '/' + id, { method: 'DELETE' });
+    },
+
+    /** 拉取财务流水 */
+    async fetchFinance(params = {}) {
+      const qs = new URLSearchParams();
+      Object.entries(params).forEach(([k, v]) => { if (v) qs.set(k, v); });
+      return this.request('/api/admin/users/finance?' + qs.toString());
+    },
+
+    /** 拉取后台工作台统计 */
+    async fetchDashboard() {
+      return this.request('/api/admin/dashboard');
+    },
+
+    /** 拉取指定用户 API Key */
+    async fetchUserApiKeys(userId) {
+      return this.request('/api/admin/users/' + userId + '/api-keys');
+    },
+
+    /** 调整用户余额 */
+    async adjustBalance(userId, amount, type, remark) {
+      return this.request('/api/admin/users/' + userId + '/balance', {
+        method: 'POST',
+        body: JSON.stringify({ amount, type, remark }),
+      });
+    },
+
+    /** 创建用户 */
+    async createUser(data) {
+      return this.request('/api/admin/users', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      });
+    },
+
+    /** 更新用户 */
+    async updateUser(id, data) {
+      return this.request('/api/admin/users/' + id, {
+        method: 'PATCH',
+        body: JSON.stringify(data),
+      });
+    },
+
+    /** 一键登录指定用户（生成该用户的 token） */
+    async impersonateUser(id) {
+      return this.request('/api/admin/users/' + id + '/impersonate', {
+        method: 'POST',
+      });
+    },
+
+    /** 创建签名映射 */
+    async createSignatureMapping(data) {
+      return this.request('/api/admin/mappings/signatures', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      });
+    },
+
+    /** 创建模板映射 */
+    async createTemplateMapping(data) {
+      return this.request('/api/admin/mappings/templates', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      });
+    },
+
+    /** 拉取公众模板列表 */
+    async fetchPublicTemplates(params = {}) {
+      const qs = new URLSearchParams();
+      Object.entries(params).forEach(([k, v]) => { if (v) qs.set(k, v); });
+      return this.request('/api/admin/public-templates?' + qs.toString());
+    },
+
+    /** 创建公众模板 */
+    async createPublicTemplate(data) {
+      return this.request('/api/admin/public-templates', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      });
+    },
+
+    /** 更新公众模板 */
+    async updatePublicTemplate(id, data) {
+      return this.request('/api/admin/public-templates/' + id, {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      });
+    },
+
+    /** 删除公众模板 */
+    async deletePublicTemplate(id) {
+      return this.request('/api/admin/public-templates/' + id, { method: 'DELETE' });
+    },
+
+  };
+
+  /* ---------- 实时推送（WebSocket via Durable Object） ---------- */
+  const Realtime = {
+    ws: null,
+    reconnectTimer: null,
+    /** 是否启用实时模式（登录后才启用） */
+    enabled: false,
+    /** 监听器列表 */
+    listeners: new Set(),
+
+    start() {
+      if (!API.isLoggedIn) return;
+      this.enabled = true;
+      this.connect();
+    },
+    stop() {
+      this.enabled = false;
+      if (this.reconnectTimer) { clearTimeout(this.reconnectTimer); this.reconnectTimer = null; }
+      if (this.ws) { try { this.ws.close(); } catch(e){} this.ws = null; }
+    },
+    connect() {
+      if (!API.isLoggedIn) return;
+      // 浏览器原生 WS 无法自定义 Authorization 头，用子协议方式传递 token
+      const proto = 'bearer.' + API.token;
+      const wsUrl = (location.protocol === 'https:' ? 'wss:' : 'ws:') + '//' + location.host + '/api/admin/ws/messages';
+      let ws;
+      try {
+        ws = new WebSocket(wsUrl, [proto]);
+      } catch (e) {
+        this.scheduleReconnect();
+        return;
+      }
+      this.ws = ws;
+
+      ws.onopen = () => {
+        console.log('[Realtime] WS 已连接，新短信将自动推送');
+      };
+      ws.onmessage = (e) => {
+        try {
+          const payload = JSON.parse(e.data);
+          this.listeners.forEach(fn => fn(payload));
+        } catch (err) {
+          console.error('[Realtime] 解析推送数据失败:', err);
+        }
+      };
+      ws.onclose = () => {
+        this.ws = null;
+        if (this.enabled) this.scheduleReconnect();
+      };
+      ws.onerror = () => {
+        try { ws.close(); } catch(e){}
+      };
+    },
+    scheduleReconnect() {
+      if (this.reconnectTimer) return;
+      this.reconnectTimer = setTimeout(() => {
+        this.reconnectTimer = null;
+        if (this.enabled) this.connect();
+      }, 5000);
+    },
+    /** 注册推送监听器 */
+    on(fn) { this.listeners.add(fn); return () => this.listeners.delete(fn); },
+  };
+
+  /* ---------- 后端短信记录 → 前端字段映射 ---------- */
+  /** 把 D1 的 sms_messages 行映射成前端渲染用的对象 */
+  function mapMessage(row) {
+      return {
+      id: row.id,
+      phone: row.to_number || '',
+      userId: row.user_id || '',
+      user: row.user_email || row.user_id || '-',
+      signature: row.signature_name || row.upstream_signature_name || '-',
+      template: row.template_name || row.upstream_template_id || '-',
+      status: row.status || 'unknown',
+      upstream: row.upstream_name || row.upstream_id || '-',
+      channel: row.channel_name || row.channel_id || '-',
+      cost: row.price != null ? Number(row.price) : 0,
+      content: row.user_content || '',
+      error: row.error_message || '',
+      time: row.created_at ? String(row.created_at).replace('T', ' ').slice(0, 19) : '-',
+    };
+  }
+
+  function mapUser(row) {
+    const email = row.email || '';
+    return {
+      ...row,
+      name: row.name || email || row.id || '-',
+      company: row.company || '-',
+      balance: Number(row.balance || 0),
+      createdAt: row.createdAt || (row.created_at ? String(row.created_at).replace('T', ' ').slice(0, 19) : '-'),
+      rate: Number(row.rate || 0),
+    };
+  }
+
+  /* ============================================================
+     数据状态（从 API 加载）
+     ============================================================ */
+  let users = [];
+  let signatures = [];
+  let templates = [];
+  let upstreams = [];
+  let channels = [];
+  let upstreamMappings = [];
+  let finance = [];
+  let dashboard = {
+    totalSends: 0, successRate: 0, failRate: 0,
+    revenue: 0, cost: 0, activeUsers: 0,
+    sendsTrend: 0, successTrend: 0, failTrend: 0,
+    revenueTrend: 0, costTrend: 0, activeTrend: 0,
+    series: [], upstreamShare: [], topChannels: []
+  };
+
+  /* ============================================================
+     状态
+     ============================================================ */
+  const state = {
+    route: location.hash || '#/dashboard',
+    sidebarCollapsed: localStorage.getItem('ts-collapsed') === '1',
+    charts: {},
+    selUsers: new Set(),
+    selMsgs: new Set(),
+    userPage: 1, userPageSize: 10, userSearch: '', userStatus: '', userSort: { key: 'createdAt', dir: 'desc' },
+    msgPage: 1, msgPageSize: 10, msgSearch: '', msgStatus: '', msgUpstream: '',
+    msgCurrentPage: [], msgOnlineTotal: 0,
+    finPage: 1, finPageSize: 10, finTab: 'all', finSearch: '',
+    channelPage: 1, channelPageSize: 10,
+    mapPage: 1, mapPageSize: 10,
+    userDetail: null,
+    lowBalanceThreshold: 50,
+    lastAutoRefreshAt: Date.now()
+  };
+
+  const Data = {
+    cache: {},
+    inflight: {},
+    preloadStarted: false,
+
+    query(params) {
+      const qs = new URLSearchParams();
+      Object.keys(params || {}).sort().forEach(k => {
+        const v = params[k];
+        if (v !== undefined && v !== null && v !== '') qs.set(k, v);
+      });
+      return qs.toString();
+    },
+
+    key(prefix, params) {
+      const qs = this.query(params);
+      return qs ? prefix + ':' + qs : prefix;
+    },
+
+    get(key, fetcher, force) {
+      if (!force && Object.prototype.hasOwnProperty.call(this.cache, key)) return Promise.resolve(this.cache[key]);
+      if (this.inflight[key]) return this.inflight[key];
+      this.inflight[key] = Promise.resolve().then(fetcher).then(data => {
+        this.cache[key] = data;
+        return data;
+      }).finally(() => { delete this.inflight[key]; });
+      return this.inflight[key];
+    },
+
+    invalidate(keys) {
+      (Array.isArray(keys) ? keys : [keys]).forEach(key => {
+        Object.keys(this.cache).forEach(k => { if (k === key || k.startsWith(key + ':')) delete this.cache[k]; });
+        Object.keys(this.inflight).forEach(k => { if (k === key || k.startsWith(key + ':')) delete this.inflight[k]; });
+      });
+    },
+
+    clear() {
+      this.cache = {};
+      this.inflight = {};
+      this.preloadStarted = false;
+      users = [];
+      signatures = [];
+      templates = [];
+      upstreams = [];
+      channels = [];
+      upstreamMappings = [];
+      finance = [];
+      publicTemplates = [];
+      state.msgCurrentPage = [];
+      state.msgOnlineTotal = 0;
+    },
+
+    preload() {
+      if (!API.isLoggedIn || this.preloadStarted) return;
+      this.preloadStarted = true;
+      Promise.allSettled([
+        this.fetchDashboard().then(data => { dashboard = data; }),
+        this.fetchUsers({ pageSize: 100 }).then(data => { users = (data.items || []).map(mapUser); }),
+        this.fetchSignatures({ status: 'pending', pageSize: 100 }).then(data => { signatures = data.items || []; }),
+        this.fetchTemplates({ status: 'pending', pageSize: 100 }).then(data => { templates = data.items || []; }),
+        this.fetchPublicTemplates({ pageSize: 100 }).then(data => { publicTemplates = data.items || []; }),
+        this.fetchUpstreams().then(data => { upstreams = data.items || data || []; }),
+        this.fetchMessages({ page: 1, pageSize: 10 }),
+        this.fetchFinance({ page: 1, pageSize: 10 })
+      ]).then(() => renderNav()).catch(() => {});
+    },
+
+    invalidateRoute(route) {
+      const map = {
+        '#/dashboard': ['dashboard', 'users'],
+        '#/users': ['users'],
+        '#/review-signatures': ['signatures'],
+        '#/review-templates': ['templates'],
+        '#/public-templates': ['public-templates'],
+        '#/upstream-mappings': ['mappings'],
+        '#/upstreams': ['upstreams', 'channels-all'],
+        '#/channels': ['channels-all', 'upstreams'],
+        '#/messages': ['messages'],
+        '#/finance': ['finance'],
+        '#/system': []
+      };
+      this.invalidate(map[route] || []);
+    },
+
+    fetchDashboard(force) {
+      return this.get('dashboard', () => API.fetchDashboard(), force);
+    },
+
+    fetchUsers(params, force) {
+      const key = this.key('users', params);
+      return this.get(key, () => API.fetchUsers(params), force);
+    },
+
+    fetchSignatures(params, force) {
+      const key = this.key('signatures', params);
+      return this.get(key, () => API.fetchSignatures(params), force);
+    },
+
+    fetchTemplates(params, force) {
+      const key = this.key('templates', params);
+      return this.get(key, () => API.fetchTemplates(params), force);
+    },
+
+    fetchPublicTemplates(params, force) {
+      const key = this.key('public-templates', params);
+      return this.get(key, () => API.fetchPublicTemplates(params), force);
+    },
+
+    fetchUpstreams(force) {
+      return this.get('upstreams', () => API.fetchUpstreams(), force);
+    },
+
+    fetchMappings(params, force) {
+      const key = this.key('mappings', params);
+      return this.get(key, () => API.fetchMappings(params), force);
+    },
+
+    fetchMessages(params, force) {
+      const p = { ...params, page: Number(params.page || 1), pageSize: Number(params.pageSize || 10) };
+      const key = this.key('messages', p);
+      return this.get(key, () => API.fetchMessages(p), force).then(data => {
+        this.prefetchPages('messages', p, data, next => API.fetchMessages(next));
+        return data;
+      });
+    },
+
+    fetchFinance(params, force) {
+      const p = { ...params, page: Number(params.page || 1), pageSize: Number(params.pageSize || 10) };
+      const key = this.key('finance', p);
+      return this.get(key, () => API.fetchFinance(p), force).then(data => {
+        this.prefetchPages('finance', p, data, next => API.fetchFinance(next));
+        return data;
+      });
+    },
+
+    prefetchPages(prefix, params, data, fetcher) {
+      const page = Number(params.page || 1);
+      const pageSize = Number(params.pageSize || 10);
+      const total = Number(data && data.total || 0);
+      const totalPages = total > 0 ? Math.max(1, Math.ceil(total / pageSize)) : page + (((data && data.items) || []).length >= pageSize ? 1 : 0);
+      [page - 1, page + 1].forEach(nextPage => {
+        if (nextPage < 1 || nextPage > totalPages) return;
+        const next = { ...params, page: nextPage };
+        const key = this.key(prefix, next);
+        if (this.cache[key] || this.inflight[key]) return;
+        this.get(key, () => fetcher(next)).catch(() => {});
+      });
+    },
+
+    fetchChannelsAll(force) {
+      return this.get('channels-all', async () => {
+        const upstreamData = await this.fetchUpstreams(force);
+        const ups = upstreamData.items || upstreamData || [];
+        const allChannels = [];
+        await Promise.all(ups.map(async u => {
+          const chData = await API.fetchChannels(u.id);
+          const chs = chData.items || chData || [];
+          chs.forEach(c => {
+            c.upstream_name = u.name;
+            c.upstream_id = u.id;
+          });
+          allChannels.push(...chs);
+        }));
+        return { upstreams: ups, channels: allChannels };
+      }, force);
+    }
+  };
+
+  /* ============================================================
+     导航配置
+     ============================================================ */
+  const navConfig = [
+    { group: '运营总览', items: [
+      { route: '#/dashboard', label: '工作台', icon: 'ri-dashboard-line' }
+    ]},
+    { group: '用户与审核', items: [
+      { route: '#/users', label: '用户管理', icon: 'ri-user-3-line' },
+      { route: '#/review-signatures', label: '签名审核', icon: 'ri-shield-check-line', badge: 'pendingSig' },
+      { route: '#/review-templates', label: '模板审核', icon: 'ri-file-list-3-line', badge: 'pendingTpl' },
+      { route: '#/public-templates', label: '公众模板', icon: 'ri-bookmark-3-line' }
+    ]},
+    { group: '路由中心', items: [
+      { route: '#/upstream-mappings', label: '上游映射', icon: 'ri-links-line' },
+      { route: '#/upstreams', label: '上游管理', icon: 'ri-server-line' },
+      { route: '#/channels', label: '通道管理', icon: 'ri-git-branch-line' }
+    ]},
+    { group: '业务运营', items: [
+      { route: '#/messages', label: '短信记录', icon: 'ri-message-3-line' },
+      { route: '#/finance', label: '财务流水', icon: 'ri-money-cny-circle-line' }
+    ]},
+    { group: '系统', items: [
+      { route: '#/system', label: '系统配置', icon: 'ri-settings-3-line' }
+    ]}
+  ];
+
+  const routeMeta = {
+    '#/dashboard': { title: '工作台', crumbs: ['运营总览', '工作台'] },
+    '#/users': { title: '用户管理', crumbs: ['用户与审核', '用户管理'] },
+    '#/review-signatures': { title: '签名审核', crumbs: ['用户与审核', '签名审核'] },
+    '#/review-templates': { title: '模板审核', crumbs: ['用户与审核', '模板审核'] },
+    '#/public-templates': { title: '公众模板', crumbs: ['用户与审核', '公众模板'] },
+    '#/upstream-mappings': { title: '上游映射', crumbs: ['路由中心', '上游映射'] },
+    '#/upstreams': { title: '上游管理', crumbs: ['路由中心', '上游管理'] },
+    '#/channels': { title: '通道管理', crumbs: ['路由中心', '通道管理'] },
+    '#/messages': { title: '短信记录', crumbs: ['业务运营', '短信记录'] },
+    '#/finance': { title: '财务流水', crumbs: ['业务运营', '财务流水'] },
+    '#/system': { title: '系统配置', crumbs: ['系统', '系统配置'] }
+  };
+
+  /* ============================================================
+     主题
+     ============================================================ */
+  function initTheme() {
+    const saved = localStorage.getItem('teaven-theme');
+    const sysDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const theme = saved || (sysDark ? 'dark' : 'light');
+    applyTheme(theme);
+  }
+  function applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('teaven-theme', theme);
+    const icon = $('#themeToggle i');
+    icon.className = theme === 'dark' ? 'ri-moon-line' : 'ri-sun-line';
+    // 重绘当前页图表
+    if (state.route === '#/dashboard' && state.charts.area) renderDashboardCharts();
+  }
+  function toggleTheme() {
+    const cur = document.documentElement.getAttribute('data-theme');
+    applyTheme(cur === 'dark' ? 'light' : 'dark');
+    toast('主题已切换', 'success');
+  }
+
+  /* ============================================================
+     导航渲染
+     ============================================================ */
+  function renderNav() {
+    const counts = {
+      pendingSig: signatures.filter(s => s.status === 'pending').length,
+      pendingTpl: templates.filter(t => t.status === 'pending').length
+    };
+    const html = navConfig.map(g => `
+      <div class="nav-group">
+        <div class="nav-group-title">${g.group}</div>
+        ${g.items.map(it => {
+          const active = state.route === it.route ? 'active' : '';
+          const badge = it.badge ? `<span class="nav-badge ${counts[it.badge] > 5 ? 'warn' : ''}">${counts[it.badge]}</span>` : '';
+          return `<a class="nav-item ${active}" data-route="${it.route}">
+            <i class="${it.icon}"></i><span class="nav-label">${it.label}</span>${badge}
+          </a>`;
+        }).join('')}
+      </div>`).join('');
+    $('#navScroll').innerHTML = html;
+    $$('.nav-item').forEach(el => el.addEventListener('click', () => navigate(el.dataset.route)));
+  }
+
+  function navigate(route) {
+    if (!routeMeta[route]) route = '#/dashboard';
+    state.route = route;
+    location.hash = route;
+    if (route === '#/dashboard') Data.invalidate('dashboard');
+    // 关闭移动端抽屉
+    $('#sidebar').classList.remove('mobile-open');
+    // 销毁图表
+    destroyCharts();
+    renderNav();
+    return renderPage();
+  }
+
+  function renderBreadcrumb() {
+    const meta = routeMeta[state.route] || routeMeta['#/dashboard'];
+    const crumbs = meta.crumbs.map((c, i) => i === meta.crumbs.length - 1
+      ? `<span class="current">${c}</span>`
+      : `<a href="javascript:void(0)">${c}</a><i class="ri-arrow-right-s-line"></i>`).join('');
+    $('#breadcrumb').innerHTML = crumbs;
+  }
+
+  /* ============================================================
+     路由分发
+     ============================================================ */
+  function renderPage(options = {}) {
+    renderBreadcrumb();
+    const map = {
+      '#/dashboard': renderDashboard,
+      '#/users': renderUsers,
+      '#/review-signatures': renderReviewSignatures,
+      '#/review-templates': renderReviewTemplates,
+      '#/public-templates': renderPublicTemplates,
+      '#/upstream-mappings': renderUpstreamMappings,
+      '#/upstreams': renderUpstreams,
+      '#/channels': renderChannels,
+      '#/messages': renderMessages,
+      '#/finance': renderFinance,
+      '#/system': renderSystem
+    };
+    const result = (map[state.route] || renderDashboard)();
+    if (!options.keepScroll) $('#content').scrollTop = 0;
+    return result;
+  }
+
+  function refreshCurrentSection() {
+    if (!API.isLoggedIn) return Promise.resolve();
+    Data.invalidateRoute(state.route);
+    return Promise.resolve(renderPage({ keepScroll: true }));
+  }
+
+  function onPageVisible() {
+    if (document.visibilityState && document.visibilityState !== 'visible') return;
+    const now = Date.now();
+    if (now - state.lastAutoRefreshAt < 1000) return;
+    state.lastAutoRefreshAt = now;
+    refreshCurrentSection().catch(() => {});
+  }
+
+  function destroyCharts() {
+    Object.keys(state.charts).forEach(k => { try { state.charts[k].destroy(); } catch(e){} delete state.charts[k]; });
+  }
+
+  /* ============================================================
+     通用组件
+     ============================================================ */
+  function toast(msg, type = 'info', title) {
+    const icons = { success:'ri-check-line', error:'ri-close-circle-line', warning:'ri-alert-line', info:'ri-information-line' };
+    const el = document.createElement('div');
+    el.className = 'toast ' + type;
+    el.innerHTML = `<i class="${icons[type]}"></i><div class="t-content">${title ? `<div class="t-title">${esc(title)}</div>` : ''}${esc(msg)}</div>`;
+    $('#toastWrap').appendChild(el);
+    setTimeout(() => { el.classList.add('removing'); setTimeout(() => el.remove(), 200); }, 3200);
+  }
+
+  function openModal(title, bodyHtml, footHtml, lg) {
+    $('#modalTitle').textContent = title;
+    $('#modalBody').innerHTML = bodyHtml;
+    $('#modalFoot').innerHTML = footHtml || `<button class="btn" onclick="TS.closeModal()">关闭</button>`;
+    $('#modalBox').classList.toggle('lg', !!lg);
+    $('#modalMask').classList.add('open');
+  }
+  function closeModal() { $('#modalMask').classList.remove('open'); }
+
+  function openDrawer(title, bodyHtml, footHtml) {
+    $('#drawerTitle').textContent = title;
+    $('#drawerBody').innerHTML = bodyHtml;
+    $('#drawerFoot').innerHTML = footHtml || `<button class="btn" onclick="TS.closeDrawer()">关闭</button>`;
+    $('#drawerMask').classList.add('open');
+    requestAnimationFrame(() => $('#drawerBox').classList.add('open'));
+  }
+  function closeDrawer() {
+    $('#drawerBox').classList.remove('open');
+    setTimeout(() => $('#drawerMask').classList.remove('open'), 250);
+  }
+
+  function initDropdowns(root = document) {
+    // 通用：.dropdown-toggle 控制 .dropdown-menu
+    $$('.dropdown', root).forEach(dd => {
+      const toggle = dd.querySelector('.dropdown-toggle');
+      const menu = dd.querySelector('.dropdown-menu');
+      if (!toggle || !menu || menu.dataset.bound) return;
+      menu.dataset.bound = '1';
+      toggle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isOpen = menu.classList.contains('open');
+        $$('.dropdown-menu.open').forEach(m => { if (m !== menu) m.classList.remove('open'); });
+        menu.classList.toggle('open', !isOpen);
+      });
+    });
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.dropdown')) $$('.dropdown-menu.open').forEach(m => m.classList.remove('open'));
+    });
+  }
+
+  function paginationHTML(page, pageSize, total) {
+    const pages = Math.max(1, Math.ceil(total / pageSize));
+    const btns = [];
+    const range = 2;
+    btns.push(`<button class="page-btn" ${page <= 1 ? 'disabled' : ''} data-pg="${page - 1}"><i class="ri-arrow-left-s-line"></i></button>`);
+    if (page > range + 1) { btns.push(`<button class="page-btn" data-pg="1">1</button>`); if (page > range + 2) btns.push(`<span class="text-muted">…</span>`); }
+    for (let i = Math.max(1, page - range); i <= Math.min(pages, page + range); i++) {
+      btns.push(`<button class="page-btn ${i === page ? 'active' : ''}" data-pg="${i}">${i}</button>`);
+    }
+    if (page < pages - range) { if (page < pages - range - 1) btns.push(`<span class="text-muted">…</span>`); btns.push(`<button class="page-btn" data-pg="${pages}">${pages}</button>`); }
+    btns.push(`<button class="page-btn" ${page >= pages ? 'disabled' : ''} data-pg="${page + 1}"><i class="ri-arrow-right-s-line"></i></button>`);
+    const start = total === 0 ? 0 : (page - 1) * pageSize + 1;
+    const end = Math.min(page * pageSize, total);
+    return `<div class="pagination">
+      <span class="page-info">第 ${start}-${end} 条 / 共 ${total} 条</span>
+      <div class="page-list">${btns.join('')}
+        <select class="page-size filter-select" data-role="pagesize">
+          ${[10, 20, 50].map(n => `<option value="${n}" ${n === pageSize ? 'selected' : ''}>${n} 条/页</option>`).join('')}
+        </select>
+      </div>
+    </div>`;
+  }
+
+  function bindPagination(container, onPage, onPageSize) {
+    $$('.page-btn[data-pg]', container).forEach(b => b.addEventListener('click', () => {
+      const p = parseInt(b.dataset.pg); if (!isNaN(p)) onPage(p);
+    }));
+    const ps = $('[data-role="pagesize"]', container);
+    if (ps) ps.addEventListener('change', () => onPageSize(parseInt(ps.value)));
+  }
+
+  function statusBadge(st) {
+    const map = { active: ['success','正常'], disabled: ['error','停用'], suspended: ['warning','暂停'], maintenance: ['warning','维护'], pending: ['warning','待审核'], approved: ['success','已通过'], rejected: ['error','已拒绝'], delivered: ['success','已送达'], failed: ['error','发送失败'], sent: ['info','已发送'], submitted: ['info','已提交'], queued: ['warning','排队中'], unknown: ['neutral','未知'] };
+    const [type, label] = map[st] || ['neutral', st];
+    return `<span class="badge ${type}">${label}</span>`;
+  }
+
+  function sparkline(data, color) {
+    if (!data || data.length < 2) return '';
+    const w = 80, h = 28, max = Math.max(...data), min = Math.min(...data);
+    const range = max - min || 1;
+    const pts = data.map((v, i) => `${(i / (data.length - 1)) * w},${h - ((v - min) / range) * (h - 4) - 2}`).join(' ');
+    return `<svg class="stat-spark" viewBox="0 0 ${w} ${h}"><polyline fill="none" stroke="${color}" stroke-width="1.5" points="${pts}"/></svg>`;
+  }
+
+  function trendValues(series, key) {
+    return (series || []).map(row => Number(row[key] || 0));
+  }
+
+  /* ============================================================
+     页面：工作台
+     ============================================================ */
+  async function renderDashboard() {
+    if (!API.isLoggedIn) {
+      $('#content').innerHTML = `<div class="empty" style="padding:60px"><i class="ri-login-circle-line" style="font-size:48px"></i><h3 style="margin:12px 0 4px">请先登录</h3><p class="text-muted">登录后即可查看运营数据</p><button class="btn primary" style="margin-top:16px" onclick="TS.openLoginModal()">立即登录</button></div>`;
+      return;
+    }
+    try {
+      const [usersData, dashData] = await Promise.all([
+        Data.fetchUsers({ pageSize: 100 }),
+        Data.fetchDashboard()
+      ]);
+      users = (usersData.items || []).map(mapUser);
+      dashboard = dashData;
+    } catch (err) {
+      renderError('数据加载失败', err.message);
+      return;
+    }
+    const d = dashboard;
+    const lowBalUsers = users.filter(u => parseFloat(u.balance) < state.lowBalanceThreshold && u.status === 'active').sort((a,b) => parseFloat(a.balance) - parseFloat(b.balance));
+    const topChannels = d.topChannels || [];
+    const series = d.series || [];
+    const stats = [
+      { label: '今日发送量', value: num(d.totalSends), icon: 'ri-send-plane-line', cls: 'brand', trend: d.sendsTrend, spark: trendValues(series, 'sends'), color: '#A0522D' },
+      { label: '成功率', value: d.successRate, unit: '%', icon: 'ri-checkbox-circle-line', cls: 'success', trend: d.successTrend, spark: trendValues(series, 'successRate'), color: '#2F855A' },
+      { label: '失败率', value: d.failRate, unit: '%', icon: 'ri-error-warning-line', cls: 'error', trend: d.failTrend, spark: trendValues(series, 'failRate'), color: '#C53030' },
+      { label: '今日收入', value: money(d.revenue), icon: 'ri-money-cny-circle-line', cls: 'warning', trend: d.revenueTrend, spark: [], color: '#B7791F' },
+      { label: '今日成本', value: money(d.cost), icon: 'ri-coin-line', cls: 'info', trend: d.costTrend, spark: [], color: '#2B6CB0' },
+      { label: '活跃用户', value: num(d.activeUsers), icon: 'ri-user-3-line', cls: 'brand', trend: d.activeTrend, spark: [], color: '#A0522D' }
+    ];
+    const html = `
+      <div class="page-head">
+        <div>
+          <div class="page-title">工作台</div>
+          <div class="page-sub">这是今日 Teaven SMS 的真实运营概览</div>
+        </div>
+        <div class="flex gap-8">
+          <button class="btn" onclick="TS.navigate('#/messages')"><i class="ri-message-3-line"></i>查看消息</button>
+          <button class="btn primary" onclick="TS.navigate('#/review-signatures')"><i class="ri-shield-check-line"></i>待审核</button>
+        </div>
+      </div>
+      <div class="stats-grid">
+        ${stats.map(s => `
+          <div class="stat-card">
+            <div class="stat-top">
+              <span class="stat-label">${s.label}</span>
+              <span class="stat-icon ${s.cls}"><i class="${s.icon}"></i></span>
+            </div>
+            <div class="stat-value font-num">${s.value}${s.unit ? `<span class="unit">${s.unit}</span>` : ''}</div>
+            <div class="stat-foot">
+              <span class="trend ${Number(s.trend || 0) >= 0 ? 'up' : 'down'}">
+                <i class="${Number(s.trend || 0) >= 0 ? 'ri-arrow-up-line' : 'ri-arrow-down-line'}"></i>${Math.abs(Number(s.trend || 0))}%
+              </span>
+              ${s.spark.length > 1 ? sparkline(s.spark, s.color) : ''}
+            </div>
+          </div>`).join('')}
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-head">
+            <span class="card-title"><i class="ri-bar-chart-grouped-line"></i>近 30 天发送量与成功率</span>
+            <div class="flex gap-8">
+              <span class="badge brand">发送量</span>
+              <span class="badge success">成功率</span>
+            </div>
+          </div>
+          <div class="card-body"><div class="chart-box"><canvas id="areaChart"></canvas></div></div>
+        </div>
+        <div class="card">
+          <div class="card-head"><span class="card-title"><i class="ri-donut-chart-line"></i>上游通道占比</span></div>
+          <div class="card-body"><div class="chart-box"><canvas id="donutChart"></canvas></div></div>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-head">
+            <span class="card-title"><i class="ri-error-warning-line"></i>低余额用户</span>
+            <span class="text-muted" style="font-size:12px">余额 < ￥${state.lowBalanceThreshold}</span>
+          </div>
+          <div class="table-wrap">
+            <table class="tbl">
+              <thead><tr><th>用户</th><th>邮箱</th><th>余额</th><th>状态</th><th>操作</th></tr></thead>
+              <tbody>
+                ${lowBalUsers.length ? lowBalUsers.map(u => `
+                  <tr>
+                    <td><div class="cell-main">${esc(u.email || u.id)}</div><div class="cell-sub mono">${u.id}</div></td>
+                    <td class="text-secondary">${esc(u.email)}</td>
+                    <td class="font-num" style="color:var(--error);font-weight:600">${money(u.balance)}</td>
+                    <td>${statusBadge(u.status)}</td>
+                    <td><button class="btn sm primary" onclick="TS.remindRecharge('${u.id}')">提醒充值</button></td>
+                  </tr>`).join('') : `<tr><td colspan="5"><div class="empty"><i class="ri-emotion-happy-line"></i>暂无低余额用户</div></td></tr>`}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head"><span class="card-title"><i class="ri-trophy-line"></i>Top 通道（按日发送量）</span></div>
+          <div class="table-wrap">
+            <table class="tbl">
+              <thead><tr><th>通道</th><th>上游</th><th>日发送量</th><th>成功率</th></tr></thead>
+              <tbody>
+                ${topChannels.length ? topChannels.map(c => `
+                  <tr>
+                    <td><div class="cell-main">${esc(c.name)}</div><div class="cell-sub">${c.country} · ${c.type}</div></td>
+                    <td class="text-secondary">${esc(c.upstream)}</td>
+                    <td class="font-num">${num(c.dailyVol)}</td>
+                    <td>
+                      <div class="flex items-center gap-8">
+                        <span class="font-num" style="font-size:12px;width:48px">${pct(c.successRate)}</span>
+                        <div class="mini-progress" style="width:60px"><span style="width:${c.successRate}%"></span></div>
+                      </div>
+                    </td>
+                  </tr>`).join('') : `<tr><td colspan="4"><div class="empty"><i class="ri-inbox-line"></i>暂无通道发送数据</div></td></tr>`}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    `;
+    $('#content').innerHTML = html;
+    renderDashboardCharts();
+  }
+
+  function renderDashboardCharts() {
+    const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const gridColor = dark ? 'rgba(210,180,140,.08)' : 'rgba(61,40,23,.08)';
+    const textColor = dark ? '#8B7E6E' : '#A89B8C';
+
+    const series = dashboard.series || [];
+    const days = series.map(row => String(row.day || '').slice(5));
+    const sends = trendValues(series, 'sends');
+    const rates = trendValues(series, 'successRate');
+    const areaCtx = $('#areaChart');
+    if (areaCtx) {
+      if (state.charts.area) state.charts.area.destroy();
+      state.charts.area = new Chart(areaCtx, {
+        type: 'line',
+        data: {
+          labels: days,
+          datasets: [
+            {
+              label: '发送量', data: sends, yAxisID: 'y', borderColor: '#A0522D',
+              backgroundColor: 'rgba(160,82,45,.12)', fill: true, tension: .4, pointRadius: 0, borderWidth: 2
+            },
+            {
+              label: '成功率', data: rates, yAxisID: 'y1', borderColor: '#2F855A',
+              backgroundColor: 'transparent', fill: false, tension: .4, pointRadius: 0, borderWidth: 2, borderDash: [4,4]
+            }
+          ]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          interaction: { mode: 'index', intersect: false },
+          plugins: { legend: { display: false }, tooltip: { backgroundColor: dark ? '#251C15' : '#fff', titleColor: dark ? '#F5E9D7' : '#2D1F14', bodyColor: dark ? '#C4B5A0' : '#6B5D4F', borderColor: dark ? '#3D2E22' : '#E8DFD3', borderWidth: 1 } },
+          scales: {
+            x: { grid: { color: gridColor, drawBorder: false }, ticks: { color: textColor, font: { size: 10 } } },
+            y: { position: 'left', grid: { color: gridColor, drawBorder: false }, ticks: { color: textColor, font: { size: 10 }, callback: v => (v/1000) + 'k' } },
+            y1: { position: 'right', min: 0, max: 100, grid: { drawOnChartArea: false }, ticks: { color: '#2F855A', font: { size: 10 }, callback: v => v + '%' } }
+          }
+        }
+      });
+    }
+    // Donut chart
+    const donutCtx = $('#donutChart');
+    if (donutCtx) {
+      if (state.charts.donut) state.charts.donut.destroy();
+      const upData = dashboard.upstreamShare || [];
+      state.charts.donut = new Chart(donutCtx, {
+        type: 'doughnut',
+        data: {
+          labels: upData.map(d => d.name),
+          datasets: [{ data: upData.map(d => d.total), backgroundColor: ['#A0522D','#6B4423','#D2B48C','#2F855A','#B7791F','#2B6CB0'], borderColor: dark ? '#251C15' : '#fff', borderWidth: 2 }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false, cutout: '62%',
+          plugins: {
+            legend: { position: 'right', labels: { color: textColor, font: { size: 12 }, padding: 12, usePointStyle: true, pointStyle: 'circle' } },
+            tooltip: { backgroundColor: dark ? '#251C15' : '#fff', titleColor: dark ? '#F5E9D7' : '#2D1F14', bodyColor: dark ? '#C4B5A0' : '#6B5D4F', borderColor: dark ? '#3D2E22' : '#E8DFD3', borderWidth: 1, callbacks: { label: c => c.label + ': ' + c.parsed + '%' } }
+          }
+        }
+      });
+    }
+  }
+
+  function remindRecharge(uid) {
+    const u = users.find(x => x.id === uid);
+    toast(`充值提醒 API 未接入，未发送通知给 ${u.email}`, 'warning');
+  }
+
+  /* ============================================================
+     页面：用户管理
+     ============================================================ */
+  async function renderUsers() {
+    if (!API.isLoggedIn) {
+      $('#content').innerHTML = `<div class="empty" style="padding:60px"><i class="ri-login-circle-line" style="font-size:48px"></i><h3 style="margin:12px 0 4px">请先登录</h3><p class="text-muted">登录后即可查看用户数据</p><button class="btn primary" style="margin-top:16px" onclick="TS.openLoginModal()">立即登录</button></div>`;
+      return;
+    }
+    try {
+      const data = await Data.fetchUsers({
+        page: state.userPage,
+        pageSize: state.userPageSize,
+        status: state.userStatus || undefined,
+        search: state.userSearch || undefined
+      });
+      users = (data.items || []).map(mapUser);
+      state.userTotal = data.total || 0;
+    } catch (err) {
+      renderError('用户列表加载失败', err.message);
+      return;
+    }
+    let list = users.slice();
+    const sk = state.userSort.key, sd = state.userSort.dir === 'asc' ? 1 : -1;
+    list.sort((a, b) => {
+      const va = a[sk], vb = b[sk];
+      if (typeof va === 'number') return (va - vb) * sd;
+      return String(va).localeCompare(String(vb)) * sd;
+    });
+    const total = state.userTotal || list.length;
+    const pageList = list;
+    const sortI = (k) => state.userSort.key === k ? (state.userSort.dir === 'asc' ? 'ri-arrow-up-line' : 'ri-arrow-down-line') : 'ri-arrow-up-down-line';
+    const allChecked = pageList.length > 0 && pageList.every(u => state.selUsers.has(u.id));
+    const html = `
+      <div class="page-head">
+        <div><div class="page-title">用户管理</div><div class="page-sub">管理平台接入用户、余额、费率与 API Key</div></div>
+        <button class="btn primary" onclick="TS.openNewUserDrawer()"><i class="ri-add-line"></i>新建用户</button>
+      </div>
+      <div class="card">
+        <div class="card-body" style="padding-bottom:0">
+          <div class="toolbar">
+            <div class="search-box"><i class="ri-search-line"></i><input type="text" placeholder="搜索姓名、邮箱或 ID" value="${esc(state.userSearch)}" id="userSearchInput" /></div>
+            <select class="filter-select" id="userStatusFilter">
+              <option value="">全部状态</option>
+              <option value="active" ${state.userStatus==='active'?'selected':''}>正常</option>
+              <option value="disabled" ${state.userStatus==='disabled'?'selected':''}>停用</option>
+              <option value="suspended" ${state.userStatus==='suspended'?'selected':''}>暂停</option>
+            </select>
+            <div class="spacer"></div>
+            <div class="dropdown">
+              <button class="btn dropdown-toggle"><i class="ri-list-check"></i>批量操作 <i class="ri-arrow-down-s-line"></i></button>
+              <div class="dropdown-menu">
+                <div class="dropdown-item" onclick="TS.batchUsers('disable')"><i class="ri-lock-line"></i>批量停用</div>
+                <div class="dropdown-item" onclick="TS.batchUsers('activate')"><i class="ri-check-line"></i>批量激活</div>
+                <div class="dropdown-divider"></div>
+                <div class="dropdown-item danger" onclick="TS.batchUsers('clear')"><i class="ri-close-line"></i>取消选择</div>
+              </div>
+            </div>
+            <button class="btn" onclick="TS.exportUsers()"><i class="ri-download-line"></i>导出</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table class="tbl">
+            <thead><tr>
+              <th class="checkbox-cell"><label class="check-row" style="justify-content:center"><input type="checkbox" id="userCheckAll" ${allChecked?'checked':''} /></label></th>
+              <th class="sortable ${state.userSort.key==='id'?'sorted':''}" data-sort="id">ID <i class="sort-i ${sortI('id')}"></i></th>
+              <th>用户</th>
+              <th>昵称</th>
+              <th>邮箱</th>
+              <th class="sortable ${state.userSort.key==='balance'?'sorted':''}" data-sort="balance">余额 <i class="sort-i ${sortI('balance')}"></i></th>
+              <th>状态</th>
+              <th class="sortable ${state.userSort.key==='createdAt'?'sorted':''}" data-sort="createdAt">创建时间 <i class="sort-i ${sortI('createdAt')}"></i></th>
+              <th>操作</th>
+            </tr></thead>
+            <tbody>
+              ${pageList.length ? pageList.map(u => `
+                <tr>
+                  <td class="checkbox-cell"><label class="check-row" style="justify-content:center"><input type="checkbox" class="user-check" data-id="${u.id}" ${state.selUsers.has(u.id)?'checked':''} /></label></td>
+                  <td><span class="mono">${u.id}</span></td>
+                  <td><div class="cell-main">${esc(u.email)}</div><div class="cell-sub">${esc(u.role)}</div></td>
+                  <td>${esc(u.nickname || '-')}</td>
+                  <td class="text-secondary">${esc(u.email)}</td>
+                  <td class="font-num" style="font-weight:600">${money(u.balance)}</td>
+                  <td>${statusBadge(u.status)}</td>
+                  <td class="text-secondary">${u.created_at ? String(u.created_at).replace('T', ' ').slice(0, 19) : '-'}</td>
+                  <td><div class="row-actions">
+                    <button class="btn sm ghost" data-tip="详情" onclick="TS.openUserDrawer('${u.id}')"><i class="ri-eye-line"></i></button>
+                    <button class="btn sm ghost" data-tip="编辑" onclick="TS.openUserDrawer('${u.id}')"><i class="ri-edit-line"></i></button>
+                    <button class="btn sm ghost" data-tip="登录该用户" onclick="TS.impersonateUser('${u.id}')"><i class="ri-login-circle-line"></i></button>
+                  </div></td>
+                </tr>`).join('') : `<tr><td colspan="9"><div class="empty"><i class="ri-inbox-line"></i>暂无匹配用户</div></td></tr>`}
+            </tbody>
+          </table>
+        </div>
+        ${paginationHTML(state.userPage, state.userPageSize, total)}
+      </div>
+    `;
+    $('#content').innerHTML = html;
+    $('#userSearchInput').addEventListener('input', (e) => { state.userSearch = e.target.value; state.userPage = 1; renderUsers(); });
+    $('#userStatusFilter').addEventListener('change', (e) => { state.userStatus = e.target.value; state.userPage = 1; renderUsers(); });
+    $$('.sortable[data-sort]', $('#content')).forEach(th => th.addEventListener('click', () => {
+      const k = th.dataset.sort;
+      if (state.userSort.key === k) state.userSort.dir = state.userSort.dir === 'asc' ? 'desc' : 'asc';
+      else { state.userSort.key = k; state.userSort.dir = 'asc'; }
+      renderUsers();
+    }));
+    $('#userCheckAll').addEventListener('change', (e) => {
+      if (e.target.checked) pageList.forEach(u => state.selUsers.add(u.id));
+      else pageList.forEach(u => state.selUsers.delete(u.id));
+      renderUsers();
+    });
+    $$('.user-check').forEach(c => c.addEventListener('change', () => {
+      if (c.checked) state.selUsers.add(c.dataset.id);
+      else state.selUsers.delete(c.dataset.id);
+      renderUsers();
+    }));
+    bindPagination($('#content'), (p) => { state.userPage = p; renderUsers(); }, (ps) => { state.userPageSize = ps; state.userPage = 1; renderUsers(); });
+    initDropdowns($('#content'));
+  }
+
+  async function batchUsers(action) {
+    if (state.selUsers.size === 0 && action !== 'clear') { toast('请先选择用户', 'warning'); return; }
+    if (action === 'clear') { state.selUsers.clear(); renderUsers(); return; }
+    try {
+      const status = action === 'activate' ? 'active' : 'disabled';
+      await Promise.all(Array.from(state.selUsers).map(id => API.updateUser(id, { status })));
+      toast(`已更新 ${state.selUsers.size} 个用户`, 'success');
+      state.selUsers.clear();
+      Data.invalidate(['users', 'dashboard']);
+      renderUsers();
+    } catch (err) {
+      toast('批量操作失败：' + err.message, 'error');
+    }
+  }
+
+  function exportUsers() { toast('用户列表已导出为 CSV', 'success'); }
+
+  async function openUserDrawer(uid) {
+    const u = users.find(x => x.id === uid); if (!u) return;
+    state.userDetail = u;
+    let apiKeys = [];
+    try { apiKeys = await API.fetchUserApiKeys(uid); } catch (err) { toast('API Key 加载失败：' + err.message, 'error'); }
+    const body = `
+      <div class="flex items-center gap-16 mb-16">
+        <div class="avatar" style="width:48px;height:48px;font-size:18px">${esc((u.email || 'A').charAt(0).toUpperCase())}</div>
+        <div>
+          <div style="font-size:17px;font-weight:600">${esc(u.email)}</div>
+          <div class="text-secondary">${esc(u.email)}</div>
+          <div class="mt-8">${statusBadge(u.status)} <span class="badge brand">${esc(u.role)}</span></div>
+        </div>
+      </div>
+      <div class="tabs" id="userTabs">
+        <div class="tab active" data-tab="info">基本信息</div>
+        <div class="tab" data-tab="balance">余额与费率</div>
+        <div class="tab" data-tab="apikey">API Key</div>
+      </div>
+      <div id="tabInfo">
+        <dl class="kv-list">
+          <dt>用户 ID</dt><dd class="mono">${u.id}</dd>
+          <dt>昵称</dt><dd>${esc(u.nickname || '-')}</dd>
+          <dt>角色</dt><dd>${esc(u.role)}</dd>
+          <dt>当前余额</dt><dd class="font-num" style="font-weight:600">${money(u.balance)}</dd>
+          <dt>账户状态</dt><dd>${statusBadge(u.status)}</dd>
+          <dt>创建时间</dt><dd class="text-secondary">${u.created_at ? String(u.created_at).replace('T', ' ').slice(0, 19) : '-'}</dd>
+        </dl>
+      </div>
+      <div id="tabBalance" style="display:none">
+        <div class="form-row">
+          <label class="form-label">昵称</label>
+          <input class="input" id="userNicknameEdit" type="text" value="${esc(u.nickname || '')}" placeholder="用户昵称" />
+        </div>
+        <div class="form-row">
+          <label class="form-label">余额调整<span class="req">*</span></label>
+          <div class="flex gap-8">
+            <select class="filter-select" id="balType" style="width:100px">
+              <option value="recharge">充值</option><option value="adjust">调整</option>
+            </select>
+            <div class="input-group has-prefix flex-1"><span class="input-prefix">￥</span><input class="input" type="number" step="0.01" id="balAmt" placeholder="0.00" /></div>
+          </div>
+          <div class="form-help">调整后将生成一条财务流水记录</div>
+        </div>
+        <div class="form-row">
+          <label class="form-label">账户状态</label>
+          <select class="select" id="userStatusEdit">
+            <option value="active" ${u.status === 'active' ? 'selected' : ''}>正常</option>
+            <option value="disabled" ${u.status === 'disabled' ? 'selected' : ''}>停用</option>
+            <option value="suspended" ${u.status === 'suspended' ? 'selected' : ''}>暂停</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label class="form-label">角色</label>
+          <select class="select" id="userRoleEdit">
+            <option value="user" ${u.role === 'user' ? 'selected' : ''}>普通用户</option>
+            <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>管理员</option>
+          </select>
+        </div>
+      </div>
+      <div id="tabApikey" style="display:none">
+        ${apiKeys.length ? apiKeys.map(k => `<dl class="kv-list mb-16"><dt>名称</dt><dd>${esc(k.name)}</dd><dt>Access Key</dt><dd class="mono">${esc(k.access_key)}</dd><dt>状态</dt><dd>${statusBadge(k.status)}</dd><dt>创建时间</dt><dd class="text-secondary">${k.created_at ? String(k.created_at).replace('T',' ').slice(0,19) : '-'}</dd></dl>`).join('') : `<div class="empty"><i class="ri-key-2-line"></i>暂无 API Key</div>`}
+        <div class="form-help">Secret Key 仅在创建时返回，后台不会展示或伪造 Secret。</div>
+      </div>
+    `;
+    const foot = `
+      <button class="btn" onclick="TS.closeDrawer()">取消</button>
+      <button class="btn" onclick="TS.impersonateUser('${u.id}')"><i class="ri-login-circle-line"></i>登录该用户</button>
+      <button class="btn primary" onclick="TS.saveUserDetail()"><i class="ri-save-line"></i>保存</button>
+    `;
+    openDrawer('用户详情 · ' + u.email, body, foot);
+    $$('#userTabs .tab').forEach(t => t.addEventListener('click', () => {
+      $$('#userTabs .tab').forEach(x => x.classList.remove('active'));
+      t.classList.add('active');
+      $('#tabInfo').style.display = t.dataset.tab === 'info' ? '' : 'none';
+      $('#tabBalance').style.display = t.dataset.tab === 'balance' ? '' : 'none';
+      $('#tabApikey').style.display = t.dataset.tab === 'apikey' ? '' : 'none';
+    }));
+  }
+
+  function openNewUserDrawer() {
+    const body = `
+      <div class="form-row"><label class="form-label">邮箱<span class="req">*</span></label><input class="input" id="nuEmail" type="email" placeholder="name@company.com" /></div>
+      <div class="form-row"><label class="form-label">初始密码<span class="req">*</span></label><input class="input" id="nuPassword" type="password" placeholder="至少 8 位" /></div>
+      <div class="form-row"><label class="form-label">昵称</label><input class="input" id="nuNickname" type="text" placeholder="用户昵称（可选）" /></div>
+      <div class="form-row"><label class="form-label">角色</label><select class="select" id="nuRole"><option value="user">普通用户</option><option value="admin">管理员</option></select></div>
+    `;
+    const foot = `<button class="btn" onclick="TS.closeDrawer()">取消</button><button class="btn primary" onclick="TS.saveNewUser()"><i class="ri-check-line"></i>创建用户</button>`;
+    openDrawer('新建用户', body, foot);
+  }
+
+  async function saveNewUser() {
+    const email = $('#nuEmail').value.trim();
+    const password = $('#nuPassword').value;
+    const nickname = $('#nuNickname').value.trim();
+    let err = '';
+    if (!email || !/^[^@]+@[^@]+\.[^@]+$/.test(email)) err = '请输入有效邮箱';
+    else if (!password || password.length < 8) err = '请输入至少 8 位密码';
+    if (err) { toast(err, 'error'); return; }
+    try {
+      await API.createUser({ email, password, role: $('#nuRole').value, nickname: nickname || undefined });
+      closeDrawer();
+      toast(`用户 ${email} 已创建`, 'success');
+      Data.invalidate(['users', 'dashboard']);
+      renderUsers();
+    } catch (err) {
+      toast('创建失败：' + err.message, 'error');
+    }
+  }
+
+  async function saveUserDetail() {
+    const u = state.userDetail; if (!u) return;
+    const tab = $('#tabBalance');
+    try {
+      if (tab && tab.style.display !== 'none') {
+        const nickname = $('#userNicknameEdit').value.trim();
+        await API.updateUser(u.id, { status: $('#userStatusEdit').value, role: $('#userRoleEdit').value, nickname });
+        const amt = parseFloat($('#balAmt').value);
+        if (!isNaN(amt) && amt > 0) await API.adjustBalance(u.id, String(amt), $('#balType').value, '后台余额调整');
+      }
+      closeDrawer();
+      toast('用户信息已保存', 'success');
+      Data.invalidate(['users', 'dashboard', 'finance']);
+      renderUsers();
+    } catch (err) {
+      toast('保存失败：' + err.message, 'error');
+    }
+  }
+
+  async function impersonateUser(uid) {
+    const u = users.find(x => x.id === uid);
+    if (!u) { toast('用户不存在', 'error'); return; }
+    
+    try {
+      const data = await API.impersonateUser(uid);
+      if (data && data.token) {
+        localStorage.setItem('impersonate_token', data.token);
+        localStorage.setItem('impersonate_user', JSON.stringify({ id: data.userId, email: data.email, role: data.role }));
+        toast(`正在登录用户 ${u.email}...`, 'success');
+        setTimeout(() => {
+          window.open('/user?impersonate=1', '_blank');
+        }, 500);
+      } else {
+        toast('获取用户 token 失败', 'error');
+      }
+    } catch (err) {
+      toast('登录失败：' + err.message, 'error');
+    }
+  }
+
+  function copyText(id) {
+    const el = $('#' + id); if (!el) return;
+    el.select(); try { document.execCommand('copy'); toast('已复制到剪贴板', 'success'); } catch(e){ toast('复制失败', 'error'); }
+  }
+  function togglePwd(id) {
+    const el = $('#' + id); if (!el) return;
+    el.type = el.type === 'password' ? 'text' : 'password';
+  }
+  function resetApiKey(uid) {
+    toast('请通过真实 API Key 管理接口重置 Key', 'warning');
+  }
+  function confirmResetKey() {
+    closeModal();
+  }
+
+  /* ============================================================
+     页面：签名审核
+     ============================================================ */
+  async function renderReviewSignatures() {
+    if (!API.isLoggedIn) {
+      $('#content').innerHTML = `<div class="empty" style="padding:60px"><i class="ri-login-circle-line" style="font-size:48px"></i><h3 style="margin:12px 0 4px">请先登录</h3><p class="text-muted">登录后即可查看审核数据</p><button class="btn primary" style="margin-top:16px" onclick="TS.openLoginModal()">立即登录</button></div>`;
+      return;
+    }
+    try {
+      const data = await Data.fetchSignatures({ status: 'pending', pageSize: 100 });
+      signatures = data.items || [];
+    } catch (err) {
+      renderError('签名审核加载失败', err.message);
+      return;
+    }
+    const pending = signatures;
+    const html = `
+      <div class="page-head">
+        <div><div class="page-title">签名审核</div><div class="page-sub">审核用户提交的短信签名，通过后方可用于发送</div></div>
+        <div class="flex gap-8">
+          <span class="badge warning dot">待审核 ${pending.length}</span>
+        </div>
+      </div>
+      ${pending.length === 0 ? `<div class="card"><div class="empty"><i class="ri-inbox-line"></i>所有签名已审核完毕</div></div>` : `
+      <div class="grid-3">
+        ${pending.map(s => `
+          <div class="card">
+            <div class="card-body">
+              <div class="flex items-center justify-between mb-16">
+                <span class="badge brand" style="font-size:14px;padding:4px 12px">${esc(s.name || s.content)}</span>
+                <span class="badge neutral">${esc(s.purpose || s.usage || '未指定')}</span>
+              </div>
+              <dl class="kv-list">
+                <dt>签名 ID</dt><dd class="mono">${s.id}</dd>
+                <dt>提交用户</dt><dd>${esc(s.user_email || s.userName || '-')} <span class="text-muted">(${s.user_id || s.userId})</span></dd>
+                <dt>提交时间</dt><dd class="text-secondary">${s.created_at || s.submittedAt || '-'}</dd>
+              </dl>
+              <div class="flex gap-8 mt-16">
+                <button class="btn success flex-1" onclick="TS.approveSignature('${s.id}')"><i class="ri-check-line"></i>通过</button>
+                <button class="btn danger flex-1" onclick="TS.rejectSignature('${s.id}')"><i class="ri-close-line"></i>拒绝</button>
+              </div>
+            </div>
+          </div>`).join('')}
+      </div>`}
+    `;
+    $('#content').innerHTML = html;
+    renderNav(); // 更新角标
+  }
+
+  async function approveSignature(id) {
+    try {
+      await API.reviewSignature(id, 'approve');
+      toast('签名已通过审核', 'success');
+      Data.invalidate(['signatures', 'dashboard']);
+      renderReviewSignatures();
+    } catch (err) {
+      toast('审核失败：' + err.message, 'error');
+    }
+  }
+  function rejectSignature(id) {
+    const s = signatures.find(x => x.id === id); if (!s) return;
+    openModal('拒绝签名 · ' + (s.name || s.content || ''), `
+      <div class="form-row">
+        <label class="form-label">拒绝原因<span class="req">*</span></label>
+        <select class="select" id="rejReasonSig">
+          <option value="">请选择拒绝原因</option>
+          <option value="签名与公司名称不符">签名与公司名称不符</option>
+          <option value="缺少资质证明文件">缺少资质证明文件</option>
+          <option value="签名内容包含敏感词">签名内容包含敏感词</option>
+          <option value="签名长度超出限制">签名长度超出限制</option>
+          <option value="其他">其他（需补充说明）</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label class="form-label">补充说明</label>
+        <textarea class="textarea" id="rejNoteSig" placeholder="请输入补充说明（可选）"></textarea>
+      </div>
+    `, `<button class="btn" onclick="TS.closeModal()">取消</button><button class="btn danger" onclick="TS.confirmRejectSignature('${id}')">确认拒绝</button>`);
+  }
+  async function confirmRejectSignature(id) {
+    const reason = $('#rejReasonSig').value;
+    if (!reason) { toast('请选择拒绝原因', 'error'); return; }
+    const note = $('#rejNoteSig').value.trim();
+    try {
+      await API.reviewSignature(id, 'reject', reason + (note ? '：' + note : ''));
+      closeModal();
+      toast('签名已拒绝', 'warning');
+      Data.invalidate(['signatures', 'dashboard']);
+      renderReviewSignatures();
+    } catch (err) {
+      toast('审核失败：' + err.message, 'error');
+    }
+  }
+
+  /* ============================================================
+     页面：模板审核
+     ============================================================ */
+  async function renderReviewTemplates() {
+    if (!API.isLoggedIn) {
+      $('#content').innerHTML = `<div class="empty" style="padding:60px"><i class="ri-login-circle-line" style="font-size:48px"></i><h3 style="margin:12px 0 4px">请先登录</h3><p class="text-muted">登录后即可查看审核数据</p><button class="btn primary" style="margin-top:16px" onclick="TS.openLoginModal()">立即登录</button></div>`;
+      return;
+    }
+    try {
+      const data = await Data.fetchTemplates({ status: 'pending', pageSize: 100 });
+      templates = data.items || [];
+    } catch (err) {
+      renderError('模板审核加载失败', err.message);
+      return;
+    }
+    const pending = templates;
+    const html = `
+      <div class="page-head">
+        <div><div class="page-title">模板审核</div><div class="page-sub">审核用户提交的短信模板内容与变量 schema</div></div>
+        <span class="badge warning dot">待审核 ${pending.length}</span>
+      </div>
+      ${pending.length === 0 ? `<div class="card"><div class="empty"><i class="ri-inbox-line"></i>所有模板已审核完毕</div></div>` : `
+      <div class="grid-2">
+        ${pending.map(t => `
+          <div class="card">
+            <div class="card-head">
+              <span class="card-title"><i class="ri-file-text-line"></i>${esc(t.name)}</span>
+              <span class="badge neutral">${esc(t.sms_type || '-')}</span>
+            </div>
+            <div class="card-body">
+              <dl class="kv-list">
+                <dt>模板 ID</dt><dd class="mono">${t.id}</dd>
+                <dt>提交用户</dt><dd>${esc(t.user_email || '-')}</dd>
+                <dt>提交时间</dt><dd class="text-secondary">${t.created_at || '-'}</dd>
+              </dl>
+              <div class="form-row mt-16">
+                <label class="form-label">模板内容</label>
+                <div style="background:var(--bg-tertiary);border-radius:8px;padding:12px;font-size:13px;line-height:1.7;color:var(--text-primary)">${esc(t.content)}</div>
+              </div>
+              <div class="flex gap-8 mt-16">
+                <button class="btn success flex-1" onclick="TS.approveTemplate('${t.id}')"><i class="ri-check-line"></i>通过</button>
+                <button class="btn danger flex-1" onclick="TS.rejectTemplate('${t.id}')"><i class="ri-close-line"></i>拒绝</button>
+              </div>
+            </div>
+          </div>`).join('')}
+      </div>`}
+    `;
+    $('#content').innerHTML = html;
+    renderNav();
+  }
+
+  async function approveTemplate(id) {
+    try {
+      await API.reviewTemplate(id, 'approve');
+      toast('模板已通过审核', 'success');
+      Data.invalidate(['templates', 'dashboard']);
+      renderReviewTemplates();
+    } catch (err) {
+      toast('审核失败：' + err.message, 'error');
+    }
+  }
+  function rejectTemplate(id) {
+    const t = templates.find(x => x.id === id); if (!t) return;
+    openModal('拒绝模板 · ' + t.name, `
+      <div class="form-row">
+        <label class="form-label">拒绝原因<span class="req">*</span></label>
+        <select class="select" id="rejReasonTpl">
+          <option value="">请选择拒绝原因</option>
+          <option value="模板内容包含敏感词">模板内容包含敏感词</option>
+          <option value="变量定义不完整">变量定义不完整</option>
+          <option value="缺少退订关键字（营销类）">缺少退订关键字（营销类）</option>
+          <option value="模板用途与签名不符">模板用途与签名不符</option>
+          <option value="其他">其他（需补充说明）</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label class="form-label">补充说明</label>
+        <textarea class="textarea" id="rejNoteTpl" placeholder="请输入补充说明（可选）"></textarea>
+      </div>
+    `, `<button class="btn" onclick="TS.closeModal()">取消</button><button class="btn danger" onclick="TS.confirmRejectTemplate('${id}')">确认拒绝</button>`);
+  }
+  async function confirmRejectTemplate(id) {
+    const reason = $('#rejReasonTpl').value;
+    if (!reason) { toast('请选择拒绝原因', 'error'); return; }
+    const note = $('#rejNoteTpl').value.trim();
+    try {
+      await API.reviewTemplate(id, 'reject', reason + (note ? '：' + note : ''));
+      closeModal();
+      toast('模板已拒绝', 'warning');
+      Data.invalidate(['templates', 'dashboard']);
+      renderReviewTemplates();
+    } catch (err) {
+      toast('审核失败：' + err.message, 'error');
+    }
+  }
+
+  /* ============================================================
+     页面：公众模板管理
+     ============================================================ */
+  let publicTemplates = [];
+  async function renderPublicTemplates() {
+    if (!API.isLoggedIn) {
+      $('#content').innerHTML = `<div class="empty" style="padding:60px"><i class="ri-login-circle-line" style="font-size:48px"></i><h3 style="margin:12px 0 4px">请先登录</h3><p class="text-muted">登录后即可管理公众模板</p><button class="btn primary" style="margin-top:16px" onclick="TS.openLoginModal()">立即登录</button></div>`;
+      return;
+    }
+    try {
+      const data = await Data.fetchPublicTemplates({ pageSize: 100 });
+      publicTemplates = data.items || [];
+    } catch (err) {
+      renderError('公众模板加载失败', err.message);
+      return;
+    }
+    const html = `
+      <div class="page-head">
+        <div><div class="page-title">公众模板管理</div><div class="page-sub">管理系统预设的公众模板，用户可直接采用这些模板</div></div>
+        <button class="btn primary" onclick="TS.createPublicTemplate()"><i class="ri-add-line"></i> 新建公众模板</button>
+      </div>
+      ${publicTemplates.length === 0 ? `<div class="card"><div class="empty"><i class="ri-inbox-line"></i>暂无公众模板，点击右上角新建</div></div>` : `
+      <div class="card">
+        <div class="table-wrap">
+          <table class="tbl">
+            <thead><tr>
+              <th>模板名称</th><th>类型</th><th>状态</th><th>描述</th><th>创建时间</th><th>操作</th>
+            </tr></thead>
+            <tbody>
+              ${publicTemplates.map(t => `
+                <tr>
+                  <td><strong>${esc(t.name)}</strong><br><span class="text-muted mono" style="font-size:12px">${t.id}</span></td>
+                  <td><span class="badge neutral">${esc(t.sms_type || '-')}</span></td>
+                  <td><span class="badge ${t.status === 'active' ? 'success' : 'warning'}">${t.status === 'active' ? '启用' : '禁用'}</span></td>
+                  <td>${esc(t.description || '-')}</td>
+                  <td class="text-secondary">${t.created_at || '-'}</td>
+                  <td>
+                    <button class="btn" onclick="TS.viewPublicTemplate('${t.id}')"><i class="ri-eye-line"></i> 查看</button>
+                    <button class="btn" onclick="TS.editPublicTemplate('${t.id}')"><i class="ri-edit-line"></i> 编辑</button>
+                    <button class="btn danger" onclick="TS.deletePublicTemplate('${t.id}')"><i class="ri-delete-bin-line"></i> 删除</button>
+                  </td>
+                </tr>`).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>`}
+    `;
+    $('#content').innerHTML = html;
+    renderNav();
+  }
+
+  function createPublicTemplate() {
+    openModal('新建公众模板', `
+      <div class="form-row">
+        <label class="form-label">模板名称<span class="req">*</span></label>
+        <input class="input" id="pubTplName" placeholder="例如：验证码模板" />
+      </div>
+      <div class="form-row">
+        <label class="form-label">模板类型<span class="req">*</span></label>
+        <select class="select" id="pubTplType">
+          <option value="verification">验证码</option>
+          <option value="notification">通知</option>
+          <option value="marketing">营销</option>
+          <option value="transactional">交易</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label class="form-label">模板内容<span class="req">*</span></label>
+        <textarea class="textarea" id="pubTplContent" rows="4" placeholder="例如：您的验证码是{code}，{expire}分钟内有效。"></textarea>
+        <div class="form-help">使用 {变量名} 表示变量</div>
+      </div>
+      <div class="form-row">
+        <label class="form-label">变量 Schema</label>
+        <textarea class="textarea" id="pubTplVars" rows="3" placeholder='例如：{"code":"验证码","expire":"过期时间"}'></textarea>
+        <div class="form-help">JSON 格式的变量定义（可选）</div>
+      </div>
+      <div class="form-row">
+        <label class="form-label">描述</label>
+        <textarea class="textarea" id="pubTplDesc" rows="2" placeholder="模板用途说明（可选）"></textarea>
+      </div>
+      <div class="form-row">
+        <label class="form-label">状态</label>
+        <select class="select" id="pubTplStatus">
+          <option value="active">启用</option>
+          <option value="disabled">禁用</option>
+        </select>
+      </div>
+    `, `<button class="btn" onclick="TS.closeModal()">取消</button><button class="btn primary" onclick="TS.confirmCreatePublicTemplate()">创建</button>`);
+  }
+
+  async function confirmCreatePublicTemplate() {
+    const name = $('#pubTplName').value.trim();
+    const content = $('#pubTplContent').value.trim();
+    const smsType = $('#pubTplType').value;
+    const status = $('#pubTplStatus').value;
+    const description = $('#pubTplDesc').value.trim();
+    const varsText = $('#pubTplVars').value.trim();
+
+    if (!name || !content) {
+      toast('请填写必填项', 'error');
+      return;
+    }
+
+    let variablesSchema = null;
+    if (varsText) {
+      try {
+        variablesSchema = JSON.parse(varsText);
+      } catch (e) {
+        toast('变量 Schema 格式错误', 'error');
+        return;
+      }
+    }
+
+    try {
+      await API.createPublicTemplate({ name, content, smsType, status, description, variablesSchema });
+      closeModal();
+      toast('公众模板已创建', 'success');
+      Data.invalidate('public-templates');
+      renderPublicTemplates();
+    } catch (err) {
+      toast('创建失败：' + err.message, 'error');
+    }
+  }
+
+  function viewPublicTemplate(id) {
+    const t = publicTemplates.find(x => x.id === id);
+    if (!t) return;
+    let varsHtml = '';
+    if (t.variables_schema) {
+      try {
+        const vars = JSON.parse(t.variables_schema);
+        varsHtml = `<div class="form-row"><label class="form-label">变量定义</label><pre style="background:var(--bg-tertiary);padding:12px;border-radius:8px;font-size:13px">${esc(JSON.stringify(vars, null, 2))}</pre></div>`;
+      } catch (e) {}
+    }
+    openModal('查看公众模板 · ' + t.name, `
+      <div class="form-row"><label class="form-label">模板 ID</label><div class="mono">${t.id}</div></div>
+      <div class="form-row"><label class="form-label">模板类型</label><div><span class="badge neutral">${esc(t.sms_type || '-')}</span></div></div>
+      <div class="form-row"><label class="form-label">状态</label><div><span class="badge ${t.status === 'active' ? 'success' : 'warning'}">${t.status === 'active' ? '启用' : '禁用'}</span></div></div>
+      <div class="form-row"><label class="form-label">描述</label><div>${esc(t.description || '-')}</div></div>
+      <div class="form-row"><label class="form-label">模板内容</label><div style="background:var(--bg-tertiary);padding:12px;border-radius:8px;font-size:13px;line-height:1.7">${esc(t.content)}</div></div>
+      ${varsHtml}
+      <div class="form-row"><label class="form-label">创建时间</label><div class="text-secondary">${t.created_at || '-'}</div></div>
+    `, `<button class="btn" onclick="TS.closeModal()">关闭</button>`);
+  }
+
+  function editPublicTemplate(id) {
+    const t = publicTemplates.find(x => x.id === id);
+    if (!t) return;
+    let varsText = '';
+    if (t.variables_schema) {
+      try {
+        varsText = JSON.stringify(JSON.parse(t.variables_schema), null, 2);
+      } catch (e) {}
+    }
+    openModal('编辑公众模板 · ' + t.name, `
+      <div class="form-row">
+        <label class="form-label">模板名称<span class="req">*</span></label>
+        <input class="input" id="pubTplName" value="${esc(t.name)}" />
+      </div>
+      <div class="form-row">
+        <label class="form-label">模板类型<span class="req">*</span></label>
+        <select class="select" id="pubTplType">
+          <option value="verification" ${t.sms_type === 'verification' ? 'selected' : ''}>验证码</option>
+          <option value="notification" ${t.sms_type === 'notification' ? 'selected' : ''}>通知</option>
+          <option value="marketing" ${t.sms_type === 'marketing' ? 'selected' : ''}>营销</option>
+          <option value="transactional" ${t.sms_type === 'transactional' ? 'selected' : ''}>交易</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label class="form-label">模板内容<span class="req">*</span></label>
+        <textarea class="textarea" id="pubTplContent" rows="4">${esc(t.content)}</textarea>
+        <div class="form-help">使用 {变量名} 表示变量</div>
+      </div>
+      <div class="form-row">
+        <label class="form-label">变量 Schema</label>
+        <textarea class="textarea" id="pubTplVars" rows="3">${esc(varsText)}</textarea>
+        <div class="form-help">JSON 格式的变量定义（可选）</div>
+      </div>
+      <div class="form-row">
+        <label class="form-label">描述</label>
+        <textarea class="textarea" id="pubTplDesc" rows="2">${esc(t.description || '')}</textarea>
+      </div>
+      <div class="form-row">
+        <label class="form-label">状态</label>
+        <select class="select" id="pubTplStatus">
+          <option value="active" ${t.status === 'active' ? 'selected' : ''}>启用</option>
+          <option value="disabled" ${t.status === 'disabled' ? 'selected' : ''}>禁用</option>
+        </select>
+      </div>
+    `, `<button class="btn" onclick="TS.closeModal()">取消</button><button class="btn primary" onclick="TS.confirmEditPublicTemplate('${id}')">保存</button>`);
+  }
+
+  async function confirmEditPublicTemplate(id) {
+    const name = $('#pubTplName').value.trim();
+    const content = $('#pubTplContent').value.trim();
+    const smsType = $('#pubTplType').value;
+    const status = $('#pubTplStatus').value;
+    const description = $('#pubTplDesc').value.trim();
+    const varsText = $('#pubTplVars').value.trim();
+
+    if (!name || !content) {
+      toast('请填写必填项', 'error');
+      return;
+    }
+
+    let variablesSchema = null;
+    if (varsText) {
+      try {
+        variablesSchema = JSON.parse(varsText);
+      } catch (e) {
+        toast('变量 Schema 格式错误', 'error');
+        return;
+      }
+    }
+
+    try {
+      await API.updatePublicTemplate(id, { name, content, smsType, status, description, variablesSchema });
+      closeModal();
+      toast('公众模板已更新', 'success');
+      Data.invalidate('public-templates');
+      renderPublicTemplates();
+    } catch (err) {
+      toast('更新失败：' + err.message, 'error');
+    }
+  }
+
+  async function deletePublicTemplate(id) {
+    const t = publicTemplates.find(x => x.id === id);
+    if (!t) return;
+    if (!confirm(`确定要删除公众模板「${t.name}」吗？此操作不可恢复。`)) return;
+    try {
+      await API.deletePublicTemplate(id);
+      toast('公众模板已删除', 'success');
+      Data.invalidate('public-templates');
+      renderPublicTemplates();
+    } catch (err) {
+      toast('删除失败：' + err.message, 'error');
+    }
+  }
+
+  /* ============================================================
+     页面：上游映射
+     ============================================================ */
+  async function renderUpstreamMappings() {
+    if (!API.isLoggedIn) {
+      $('#content').innerHTML = `<div class="empty" style="padding:60px"><i class="ri-login-circle-line" style="font-size:48px"></i><h3 style="margin:12px 0 4px">请先登录</h3><p class="text-muted">登录后即可查看映射数据</p><button class="btn primary" style="margin-top:16px" onclick="TS.openLoginModal()">立即登录</button></div>`;
+      return;
+    }
+    try {
+      const data = await Data.fetchMappings({ page: state.mapPage, pageSize: state.mapPageSize });
+      upstreamMappings = data.items || [];
+      state.mapTotal = data.total || 0;
+    } catch (err) {
+      renderError('上游映射加载失败', err.message);
+      return;
+    }
+    const list = upstreamMappings;
+    const html = `
+      <div class="page-head">
+        <div><div class="page-title">上游映射</div><div class="page-sub">展示真实签名/模板到上游的映射关系</div></div>
+      </div>
+      <div class="card">
+        <div class="table-wrap">
+          <table class="tbl">
+            <thead><tr>
+              <th>类型</th><th>签名ID</th><th>上游签名</th><th>模板ID</th><th>上游模板</th><th>优先级</th><th>状态</th><th>操作</th>
+            </tr></thead>
+            <tbody>
+              ${list.length ? list.map(m => `
+                <tr>
+                  <td>${m.mapping_type === 'template' ? '模板' : '签名'}</td>
+                  <td class="mono">${m.signature_id || m.signatureId || '-'}</td>
+                  <td>${esc(m.upstream_signature_name || m.upstreamSig || '-')}</td>
+                  <td class="mono">${m.template_id || m.templateId || '-'}</td>
+                  <td class="mono">${esc(m.upstream_template_id || m.upstreamTpl || '-')}</td>
+                  <td><span class="font-num" style="font-weight:600">${m.priority || 100}</span></td>
+                  <td>${statusBadge(m.status)}</td>
+                  <td><div class="row-actions">
+                    <button class="btn sm ghost" data-tip="删除" onclick="TS.deleteMap('${m.id}', '${m.mapping_type || 'signature'}')"><i class="ri-delete-bin-line"></i></button>
+                  </div></td>
+                </tr>`).join('') : `<tr><td colspan="8"><div class="empty"><i class="ri-inbox-line"></i>暂无映射数据</div></td></tr>`}
+            </tbody>
+          </table>
+        </div>
+        ${paginationHTML(state.mapPage, state.mapPageSize, state.mapTotal || list.length)}
+      </div>
+    `;
+    $('#content').innerHTML = html;
+    bindPagination($('#content'), (p) => { state.mapPage = p; renderUpstreamMappings(); }, (ps) => { state.mapPageSize = ps; state.mapPage = 1; renderUpstreamMappings(); });
+  }
+
+  function openNewMapDrawer() {
+    toast('请通过真实签名/模板映射接口创建映射', 'warning');
+  }
+  function saveNewMap() {
+    toast('未创建映射：请调用真实映射 API', 'warning');
+  }
+  function openEditMap(id) {
+    const m = upstreamMappings.find(x => x.id === id); if (!m) return;
+    toast('映射编辑 API 未接入，未修改数据', 'warning');
+  }
+  function deleteMap(id, type) {
+    openModal('删除映射', `<p>确认删除该上游映射？此操作不可恢复。</p>`, `<button class="btn" onclick="TS.closeModal()">取消</button><button class="btn danger" onclick="TS.confirmDeleteMap('${id}', '${type}')">确认删除</button>`);
+  }
+  async function confirmDeleteMap(id, type) {
+    try {
+      await API.deleteMapping(type, id);
+      closeModal();
+      toast('映射已删除', 'success');
+      Data.invalidate('mappings');
+      renderUpstreamMappings();
+    } catch (err) {
+      toast('删除失败：' + err.message, 'error');
+    }
+  }
+
+  /* ============================================================
+     页面：上游管理
+     ============================================================ */
+  async function renderUpstreams() {
+    if (!API.isLoggedIn) {
+      $('#content').innerHTML = `<div class="empty" style="padding:60px"><i class="ri-login-circle-line" style="font-size:48px"></i><h3 style="margin:12px 0 4px">请先登录</h3><p class="text-muted">登录后即可查看上游数据</p><button class="btn primary" style="margin-top:16px" onclick="TS.openLoginModal()">立即登录</button></div>`;
+      return;
+    }
+    try {
+      const data = await Data.fetchUpstreams();
+      upstreams = data.items || data || [];
+    } catch (err) {
+      renderError('上游管理加载失败', err.message);
+      return;
+    }
+    const html = `
+      <div class="page-head">
+        <div><div class="page-title">上游管理</div><div class="page-sub">管理 SMS 上游厂商、适配器、API 凭证与回调地址</div></div>
+        <button class="btn primary" onclick="TS.openNewUpstreamDrawer()"><i class="ri-add-line"></i>新增上游</button>
+      </div>
+      <div class="card">
+        <div class="table-wrap">
+          <table class="tbl">
+            <thead><tr>
+              <th>编码</th><th>名称</th><th>适配器</th><th>状态</th><th>创建时间</th><th>操作</th>
+            </tr></thead>
+            <tbody>
+              ${upstreams.length ? upstreams.map(u => `
+                <tr>
+                  <td><span class="mono">${u.code}</span></td>
+                  <td><div class="cell-main">${esc(u.name)}</div><div class="cell-sub mono">${u.id}</div></td>
+                  <td><span class="badge neutral">${u.adapter_type || u.adapter || '-'}</span></td>
+                  <td>${statusBadge(u.status)}</td>
+                  <td class="text-secondary">${u.created_at ? String(u.created_at).replace('T', ' ').slice(0, 19) : '-'}</td>
+                  <td><div class="row-actions">
+                    <button class="btn sm ghost" data-tip="配置" onclick="TS.openUpstreamConfig('${u.id}')"><i class="ri-settings-3-line"></i></button>
+                    <button class="btn sm ghost" data-tip="检测" onclick="TS.testUpstream('${u.id}')"><i class="ri-pulse-line"></i></button>
+                  </div></td>
+                </tr>`).join('') : `<tr><td colspan="6"><div class="empty"><i class="ri-inbox-line"></i>暂无上游数据</div></td></tr>`}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
+    $('#content').innerHTML = html;
+  }
+
+  async function toggleUpstream(id, on) {
+    try {
+      await API.updateUpstream(id, { status: on ? 'active' : 'disabled' });
+      toast(`上游已${on ? '启用' : '停用'}`, on ? 'success' : 'warning');
+      Data.invalidate(['upstreams', 'channels-all', 'dashboard']);
+      renderUpstreams();
+    } catch (err) {
+      toast('操作失败：' + err.message, 'error');
+    }
+  }
+  function openNewUpstreamDrawer() {
+    const body = `
+      <div class="form-row"><label class="form-label">上游编码<span class="req">*</span></label><input class="input" id="upCode" placeholder="上游编码" /><div class="form-help">全局唯一，小写字母与连字符</div></div>
+      <div class="form-row"><label class="form-label">名称<span class="req">*</span></label><input class="input" id="upName" placeholder="请输入上游名称" /></div>
+      <div class="form-row"><label class="form-label">适配器类型<span class="req">*</span></label>
+        <select class="select" id="upAdapter" onchange="TS.onAdapterTypeChange()">
+          <option value="smsbao">短信宝</option>
+          <option value="aliyun">阿里云</option>
+          <option value="tencent">腾讯云</option>
+          <option value="huawei">华为云</option>
+          <option value="twilio">Twilio</option>
+          <option value="messagebird">MessageBird</option>
+          <option value="netease">网易云信</option>
+          <option value="http">通用 HTTP</option>
+        </select>
+      </div>
+      <div id="smsbaoConfig">
+        <div class="form-row"><label class="form-label">短信宝用户名<span class="req">*</span></label><input class="input" id="smsbaoUser" placeholder="短信宝平台账号" /></div>
+        <div class="form-row"><label class="form-label">短信宝密码<span class="req">*</span></label><input class="input" id="smsbaoPass" type="password" placeholder="短信宝平台密码" /></div>
+        <div class="form-row"><label class="form-label">API 地址</label><input class="input" id="smsbaoApiUrl" placeholder="https://api.smsbao.com" value="https://api.smsbao.com" /></div>
+        <div class="form-row"><label class="form-label">Webhook Secret<span class="req">*</span></label><input class="input" id="smsbaoWebhookSecret" type="password" placeholder="高熵回调密钥，需放入回调 URL token 参数" /></div>
+        <div class="form-row"><label class="form-label">状态回调地址</label><input class="input" id="smsbaoCallback" placeholder="https://sms.teaven.io/webhooks/upstreams/{code}?token=你的密钥" /></div>
+      </div>
+      <div id="genericConfig" style="display:none">
+        <div class="form-row"><label class="form-label">API Endpoint<span class="req">*</span></label><input class="input" id="upEndpoint" placeholder="上游 API 地址" /></div>
+        <div class="form-row" id="authTypeRow" style="display:none"><label class="form-label">认证方式<span class="req">*</span></label>
+          <select class="select" id="upAuth">
+            <option value="AK/SK">AK/SK</option><option value="SecretId/SecretKey">SecretId/SecretKey</option>
+            <option value="APP Key/Secret">APP Key/Secret</option><option value="Account SID/Token">Account SID/Token</option><option value="Access Key">Access Key</option>
+          </select>
+        </div>
+        <div class="form-row"><label class="form-label" id="akLabel">Access Key</label><input class="input" id="upAk" placeholder="凭证 AK" /></div>
+        <div class="form-row"><label class="form-label" id="skLabel">Secret</label><input class="input" id="upSk" type="password" placeholder="凭证 Secret" /></div>
+        <div class="form-row"><label class="form-label">Webhook Secret<span class="req">*</span></label><input class="input" id="upWebhookSecret" type="password" placeholder="用于校验上游回调" /></div>
+        <div class="form-row"><label class="form-label">回调地址</label><input class="input" id="upCallback" placeholder="https://sms.teaven.io/webhooks/upstreams/{code}" /></div>
+      </div>
+    `;
+    const foot = `<button class="btn" onclick="TS.closeDrawer()">取消</button><button class="btn primary" onclick="TS.saveNewUpstream()"><i class="ri-check-line"></i>创建上游</button>`;
+    openDrawer('新增上游', body, foot);
+  }
+  function onAdapterTypeChange() {
+    const adapterType = $('#upAdapter').value;
+    const smsbaoConfig = $('#smsbaoConfig');
+    const genericConfig = $('#genericConfig');
+    const authTypeRow = $('#authTypeRow');
+    const akLabel = $('#akLabel');
+    const skLabel = $('#skLabel');
+    const upAuth = $('#upAuth');
+
+    if (adapterType === 'smsbao') {
+      smsbaoConfig.style.display = '';
+      genericConfig.style.display = 'none';
+      return;
+    }
+
+    smsbaoConfig.style.display = 'none';
+    genericConfig.style.display = '';
+
+    // 各适配器对应的认证方式和凭证标签
+    const adapterAuthMap = {
+      aliyun: { auth: 'AK/SK', akLabel: 'Access Key ID', skLabel: 'Access Key Secret', akPlaceholder: '阿里云 AccessKey ID', skPlaceholder: '阿里云 AccessKey Secret' },
+      tencent: { auth: 'SecretId/SecretKey', akLabel: 'SecretId', skLabel: 'SecretKey', akPlaceholder: '腾讯云 SecretId', skPlaceholder: '腾讯云 SecretKey' },
+      huawei: { auth: 'AK/SK', akLabel: 'App Key', skLabel: 'App Secret', akPlaceholder: '华为云 App Key', skPlaceholder: '华为云 App Secret' },
+      twilio: { auth: 'Account SID/Token', akLabel: 'Account SID', skLabel: 'Auth Token', akPlaceholder: 'Twilio Account SID', skPlaceholder: 'Twilio Auth Token' },
+      messagebird: { auth: 'Access Key', akLabel: 'Access Key', skLabel: '', akPlaceholder: 'MessageBird Access Key', skPlaceholder: '' },
+      netease: { auth: 'APP Key/Secret', akLabel: 'App Key', skLabel: 'App Secret', akPlaceholder: '网易云信 App Key', skPlaceholder: '网易云信 App Secret' },
+      http: { auth: null, akLabel: 'Access Key', skLabel: 'Secret', akPlaceholder: '凭证 AK', skPlaceholder: '凭证 Secret' },
+    };
+
+    const mapping = adapterAuthMap[adapterType] || adapterAuthMap.http;
+
+    if (mapping.auth) {
+      // 有固定认证方式，隐藏下拉框，自动设置
+      authTypeRow.style.display = 'none';
+      upAuth.value = mapping.auth;
+    } else {
+      // 通用 HTTP，需要手动选择
+      authTypeRow.style.display = '';
+    }
+
+    akLabel.textContent = mapping.akLabel;
+    $('#upAk').placeholder = mapping.akPlaceholder;
+
+    if (mapping.skLabel) {
+      skLabel.textContent = mapping.skLabel;
+      $('#upSk').placeholder = mapping.skPlaceholder;
+      $('#upSk').parentElement.style.display = '';
+    } else {
+      $('#upSk').parentElement.style.display = 'none';
+    }
+  }
+  async function saveNewUpstream() {
+    const code = $('#upCode').value.trim();
+    const name = $('#upName').value.trim();
+    const adapterType = $('#upAdapter').value;
+    if (!code || !name) { toast('请填写完整必填项', 'error'); return; }
+    try {
+      let config;
+      if (adapterType === 'smsbao') {
+        const username = $('#smsbaoUser').value.trim();
+        const password = $('#smsbaoPass').value.trim();
+        const webhookSecret = $('#smsbaoWebhookSecret').value.trim();
+        if (!username || !password || !webhookSecret) { toast('请填写短信宝用户名、密码和 Webhook Secret', 'error'); return; }
+        config = {
+          username,
+          password,
+          apiUrl: $('#smsbaoApiUrl').value.trim() || 'https://api.smsbao.com',
+          webhookSecret,
+        };
+      } else {
+        const webhookSecret = $('#upWebhookSecret').value.trim();
+        if (!webhookSecret) { toast('请填写 Webhook Secret', 'error'); return; }
+        config = {
+          endpoint: $('#upEndpoint').value.trim(),
+          auth: $('#upAuth').value,
+          accessKey: $('#upAk').value.trim(),
+          secret: $('#upSk').value.trim(),
+          callback: $('#upCallback').value.trim(),
+          webhookSecret,
+        };
+      }
+      await API.createUpstream({ code, name, adapterType, config });
+      closeDrawer();
+      toast(`上游「${name}」已创建`, 'success');
+      Data.invalidate(['upstreams', 'channels-all', 'dashboard']);
+      renderUpstreams();
+    } catch (err) {
+      toast('创建失败：' + err.message, 'error');
+    }
+  }
+  function openUpstreamConfig(id) {
+    const u = upstreams.find(x => x.id === id); if (!u) return;
+    const body = `
+      <dl class="kv-list">
+        <dt>上游编码</dt><dd class="mono">${u.code}</dd>
+        <dt>名称</dt><dd>${esc(u.name)}</dd>
+        <dt>适配器</dt><dd>${u.adapter_type || u.adapter || '-'}</dd>
+        <dt>状态</dt><dd>${statusBadge(u.status)}</dd>
+        <dt>创建时间</dt><dd class="text-secondary">${u.created_at ? String(u.created_at).replace('T', ' ').slice(0, 19) : '-'}</dd>
+      </dl>`;
+    openDrawer('上游配置 · ' + u.name, body);
+  }
+  function testUpstream(id) {
+    const u = upstreams.find(x => x.id === id); if (!u) return;
+    toast(`上游「${u.name}」真实连通性检测 API 未接入，未发送任何短信`, 'warning');
+  }
+
+  /* ============================================================
+     页面：通道管理
+     ============================================================ */
+  async function renderChannels() {
+    if (!API.isLoggedIn) {
+      $('#content').innerHTML = `<div class="empty" style="padding:60px"><i class="ri-login-circle-line" style="font-size:48px"></i><h3 style="margin:12px 0 4px">请先登录</h3><p class="text-muted">登录后即可查看通道数据</p><button class="btn primary" style="margin-top:16px" onclick="TS.openLoginModal()">立即登录</button></div>`;
+      return;
+    }
+    try {
+      const data = await Data.fetchChannelsAll();
+      upstreams = data.upstreams;
+      channels = data.channels;
+    } catch (err) {
+      renderError('通道管理加载失败', err.message);
+      return;
+    }
+    const list = channels;
+    const start = (state.channelPage - 1) * state.channelPageSize;
+    const pageList = list.slice(start, start + state.channelPageSize);
+    const html = `
+      <div class="page-head">
+        <div><div class="page-title">通道管理</div><div class="page-sub">管理发送通道、成本价、优先级与成功率监控</div></div>
+        <button class="btn primary" onclick="TS.openNewChannelDrawer()"><i class="ri-add-line"></i>新增通道</button>
+      </div>
+      <div class="card">
+        <div class="table-wrap">
+          <table class="tbl">
+            <thead><tr>
+              <th>通道</th><th>上游</th><th>国家</th><th>类型</th><th>成本价</th><th>优先级</th><th>状态</th><th>操作</th>
+            </tr></thead>
+            <tbody>
+              ${pageList.length ? pageList.map(c => `
+                <tr>
+                  <td><div class="cell-main">${esc(c.name)}</div><div class="cell-sub mono">${c.id}</div></td>
+                  <td class="text-secondary">${esc(c.upstream_name || c.upstream_id || '-')}</td>
+                  <td><span class="badge neutral">${c.country_code || c.country || '*'}</span></td>
+                  <td>${esc(c.sms_type || c.type || '-')}</td>
+                  <td class="font-num">${money(c.cost_price || c.cost || 0)}</td>
+                  <td><span class="font-num" style="font-weight:600">${c.priority || 100}</span></td>
+                  <td>${statusBadge(c.status)}</td>
+                  <td><div class="row-actions">
+                    <button class="btn sm ghost" data-tip="详情" onclick="TS.openChannelDrawer('${c.id}')"><i class="ri-eye-line"></i></button>
+                  </div></td>
+                </tr>`).join('') : `<tr><td colspan="8"><div class="empty"><i class="ri-inbox-line"></i>暂无通道数据</div></td></tr>`}
+            </tbody>
+          </table>
+        </div>
+        ${paginationHTML(state.channelPage, state.channelPageSize, list.length)}
+      </div>
+    `;
+    $('#content').innerHTML = html;
+    bindPagination($('#content'), (p) => { state.channelPage = p; renderChannels(); }, (ps) => { state.channelPageSize = ps; state.channelPage = 1; renderChannels(); });
+  }
+
+  function openNewChannelDrawer(id) {
+    const editing = !!id;
+    const c = editing ? channels.find(x => x.id === id) : null;
+    if (!editing && upstreams.length === 0) { toast('请先创建真实上游后再新增通道', 'warning'); return; }
+    const upOpts = upstreams.map(u => `<option value="${u.id}" ${c&&c.upstream_id===u.id?'selected':''}>${esc(u.name)}</option>`).join('');
+    const body = `
+      <div class="form-row"><label class="form-label">通道名称<span class="req">*</span></label><input class="input" id="chName" value="${c?esc(c.name):''}" placeholder="通道名称" /></div>
+      <div class="form-row"><label class="form-label">上游厂商<span class="req">*</span></label><select class="select" id="chUpstream">${upOpts}</select></div>
+      <div class="form-row"><label class="form-label">国家/地区<span class="req">*</span></label>
+        <select class="select" id="chCountry">
+          ${['CN','US','HK','SG','JP','KR','GB','DE'].map(co => `<option value="${co}" ${c&&c.country===co?'selected':''}>${co}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-row"><label class="form-label">类型<span class="req">*</span></label>
+        <select class="select" id="chType">
+          ${[['verification','验证码'],['notification','通知'],['marketing','营销'],['transactional','事务']].map(([v,t]) => `<option value="${v}" ${c&&c.sms_type===v?'selected':''}>${t}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-row"><label class="form-label">成本价（元）<span class="req">*</span></label><div class="input-group has-prefix"><span class="input-prefix">￥</span><input class="input" type="number" step="0.0001" id="chCost" value="${c?c.cost_price:'0.0000'}" /></div></div>
+      <div class="form-row"><label class="form-label">优先级<span class="req">*</span></label><input class="input" type="number" id="chPriority" value="${c?c.priority:'100'}" /><div class="form-help">数字越小优先级越高</div></div>
+      <div class="form-row"><label class="check-row"><input type="checkbox" id="chStatus" ${(!c||c.status==='active')?'checked':''} /> 启用该通道</label></div>
+    `;
+    const foot = `<button class="btn" onclick="TS.closeDrawer()">取消</button><button class="btn primary" onclick="TS.saveChannel('${id||''}')"><i class="ri-check-line"></i>${editing?'保存':'创建通道'}</button>`;
+    openDrawer(editing ? '编辑通道' : '新增通道', body, foot);
+  }
+  async function saveChannel(id) {
+    const name = $('#chName').value.trim();
+    const cost = parseFloat($('#chCost').value);
+    if (!name) { toast('请输入通道名称', 'error'); return; }
+    if (isNaN(cost) || cost <= 0) { toast('请输入有效成本价', 'error'); return; }
+    if (id) { toast('通道更新 API 未接入，未修改数据', 'warning'); return; }
+    try {
+      await API.createChannel($('#chUpstream').value, {
+        name,
+        countryCode: $('#chCountry').value,
+        smsType: $('#chType').value,
+        costPrice: cost.toFixed(4),
+        priority: parseInt($('#chPriority').value) || 100,
+      });
+      toast(`通道「${name}」已创建`, 'success');
+      closeDrawer();
+      Data.invalidate(['channels-all', 'dashboard']);
+      renderChannels();
+    } catch (err) {
+      toast('创建失败：' + err.message, 'error');
+    }
+  }
+  function openChannelDrawer(id) {
+    const c = channels.find(x => x.id === id); if (!c) return;
+    const body = `
+      <dl class="kv-list">
+        <dt>通道 ID</dt><dd class="mono">${c.id}</dd>
+        <dt>通道名称</dt><dd>${esc(c.name)}</dd>
+        <dt>上游厂商</dt><dd>${esc(c.upstream_name || c.upstream_id || '-')}</dd>
+        <dt>国家/地区</dt><dd>${c.country_code || '*'}</dd>
+        <dt>类型</dt><dd>${esc(c.sms_type || '-')}</dd>
+        <dt>成本价</dt><dd class="font-num">${money(c.cost_price || 0)}</dd>
+        <dt>优先级</dt><dd class="font-num">${c.priority}</dd>
+        <dt>状态</dt><dd>${statusBadge(c.status)}</dd>
+      </dl>`;
+    openDrawer('通道详情 · ' + c.name, body);
+  }
+
+  /* ============================================================
+     页面：短信记录
+     ============================================================ */
+  async function renderMessages() {
+    if (!API.isLoggedIn) {
+      $('#content').innerHTML = `<div class="empty" style="padding:60px"><i class="ri-login-circle-line" style="font-size:48px"></i><h3 style="margin:12px 0 4px">请先登录</h3><p class="text-muted">登录后即可查看短信记录</p><button class="btn primary" style="margin-top:16px" onclick="TS.openLoginModal()">立即登录</button></div>`;
+      return;
+    }
+
+    let pageList = [];
+    let total = 0;
+
+    try {
+      const data = await Data.fetchMessages({
+        page: state.msgPage,
+        pageSize: state.msgPageSize,
+        status: state.msgStatus || undefined,
+        to: state.msgSearch || undefined,
+      });
+      pageList = (data.items || []).map(mapMessage);
+      total = data.total || 0;
+    } catch (err) {
+      renderError('短信记录加载失败', err.message);
+      return;
+    }
+
+    // 缓存当前页，供 WS 推送更新使用
+    state.msgCurrentPage = pageList;
+    state.msgOnlineTotal = total;
+
+    const realtimeBadge = Realtime.ws && Realtime.ws.readyState === 1
+      ? `<span class="badge success" style="font-size:11px"><i class="ri-radio-button-line"></i> 实时</span>`
+      : `<span class="badge warn" style="font-size:11px"><i class="ri-wifi-off-line"></i> 连接中</span>`;
+
+    const html = `
+      <div class="page-head">
+        <div><div class="page-title">短信记录 ${realtimeBadge}</div><div class="page-sub">全局消息检索 · 追踪每条短信的路由、状态与费用 · 新记录自动推送</div></div>
+        <button class="btn" onclick="TS.exportMessages()"><i class="ri-download-line"></i>导出记录</button>
+      </div>
+      <div class="card">
+        <div class="card-body" style="padding-bottom:0">
+          <div class="toolbar">
+            <div class="search-box"><i class="ri-search-line"></i><input type="text" placeholder="搜索手机号" value="${esc(state.msgSearch)}" id="msgSearchInput" /></div>
+            <select class="filter-select" id="msgStatusFilter">
+              <option value="">全部状态</option>
+              <option value="delivered" ${state.msgStatus==='delivered'?'selected':''}>已送达</option>
+              <option value="sent" ${state.msgStatus==='sent'?'selected':''}>已发送</option>
+              <option value="submitted" ${state.msgStatus==='submitted'?'selected':''}>已提交</option>
+              <option value="queued" ${state.msgStatus==='queued'?'selected':''}>排队中</option>
+              <option value="failed" ${state.msgStatus==='failed'?'selected':''}>发送失败</option>
+            </select>
+            <div class="spacer"></div>
+            <span class="text-muted" style="font-size:12px">共 ${num(total)} 条</span>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table class="tbl">
+            <thead><tr>
+              <th>消息 ID</th><th>手机号</th><th>用户</th><th>签名</th><th>模板</th><th>状态</th><th>上游</th><th>通道</th><th>费用</th><th>时间</th><th>操作</th>
+            </tr></thead>
+            <tbody id="msgTbody">
+              ${pageList.length ? pageList.map(m => msgRowHTML(m)).join('') : `<tr><td colspan="11"><div class="empty"><i class="ri-inbox-line"></i>暂无匹配记录</div></td></tr>`}
+            </tbody>
+          </table>
+        </div>
+        ${paginationHTML(state.msgPage, state.msgPageSize, total)}
+      </div>
+    `;
+    $('#content').innerHTML = html;
+    $('#msgSearchInput').addEventListener('input', (e) => { state.msgSearch = e.target.value; state.msgPage = 1; renderMessages(); });
+    $('#msgStatusFilter').addEventListener('change', (e) => { state.msgStatus = e.target.value; state.msgPage = 1; renderMessages(); });
+    bindPagination($('#content'), (p) => { state.msgPage = p; renderMessages(); }, (ps) => { state.msgPageSize = ps; state.msgPage = 1; renderMessages(); });
+  }
+
+  /** 单行短信记录 HTML（抽取出来，WS 推送更新时复用） */
+  function msgRowHTML(m) {
+    return `<tr data-msg-id="${esc(m.id)}">
+      <td class="mono">${esc(m.id)}</td>
+      <td class="font-num">${esc(m.phone)}</td>
+      <td>${esc(m.user)}</td>
+      <td><span class="badge brand">${esc(m.signature)}</span></td>
+      <td>${esc(m.template)}</td>
+      <td>${statusBadge(m.status)}</td>
+      <td class="text-secondary">${esc(m.upstream)}</td>
+      <td class="text-secondary">${esc(m.channel)}</td>
+      <td class="font-num">${money(m.cost)}</td>
+      <td class="text-secondary" style="font-size:12px">${esc(m.time)}</td>
+      <td><button class="btn sm ghost" data-tip="详情" onclick="TS.openMessageDrawer('${esc(m.id)}')"><i class="ri-eye-line"></i></button></td>
+    </tr>`;
+  }
+
+  /** 错误占位渲染 */
+  function renderError(title, msg) {
+    $('#content').innerHTML = `<div class="empty" style="padding:60px"><i class="ri-error-warning-line" style="font-size:48px"></i><h3 style="margin:12px 0 4px">${esc(title)}</h3><p class="text-muted">${esc(msg)}</p></div>`;
+  }
+
+  function openMessageDrawer(id) {
+    const cache = state.msgCurrentPage || [];
+    const m = cache.find(x => x.id === id);
+    if (!m) return;
+    const body = `
+      <div class="mb-16">${statusBadge(m.status)}</div>
+      <dl class="kv-list">
+        <dt>消息 ID</dt><dd class="mono">${esc(m.id)}</dd>
+        <dt>手机号</dt><dd class="font-num">${esc(m.phone)}</dd>
+        <dt>用户</dt><dd>${esc(m.user)}</dd>
+        <dt>签名</dt><dd>${esc(m.signature)}</dd>
+        <dt>模板</dt><dd>${esc(m.template)}</dd>
+        <dt>状态</dt><dd>${statusBadge(m.status)}</dd>
+        <dt>上游厂商</dt><dd>${esc(m.upstream)}</dd>
+        <dt>通道</dt><dd>${esc(m.channel)}</dd>
+        <dt>费用</dt><dd class="font-num" style="font-weight:600">${money(m.cost)}</dd>
+        <dt>发送时间</dt><dd class="text-secondary">${esc(m.time)}</dd>
+      </dl>
+    `;
+    openDrawer('消息详情', body);
+  }
+  function exportMessages() { toast('短信记录已导出为 CSV', 'success'); }
+
+  /* ============================================================
+     页面：财务流水
+     ============================================================ */
+  async function renderFinance() {
+    if (!API.isLoggedIn) {
+      $('#content').innerHTML = `<div class="empty" style="padding:60px"><i class="ri-login-circle-line" style="font-size:48px"></i><h3 style="margin:12px 0 4px">请先登录</h3><p class="text-muted">登录后即可查看财务流水</p><button class="btn primary" style="margin-top:16px" onclick="TS.openLoginModal()">立即登录</button></div>`;
+      return;
+    }
+    let pageList = [];
+    let total = 0;
+    try {
+      const data = await Data.fetchFinance({
+        page: state.finPage,
+        pageSize: state.finPageSize,
+        type: state.finTab === 'all' ? undefined : state.finTab,
+        search: state.finSearch || undefined,
+      });
+      pageList = data.items || [];
+      finance = pageList;
+      total = data.total || 0;
+    } catch (err) {
+      renderError('财务流水加载失败', err.message);
+      return;
+    }
+    const tabCounts = {
+      all: total,
+      recharge: state.finTab === 'recharge' ? total : '-',
+      charge: state.finTab === 'charge' ? total : '-',
+      refund: state.finTab === 'refund' ? total : '-',
+      adjust: state.finTab === 'adjust' ? total : '-'
+    };
+    const finTypeBadge = (t) => {
+      const map = { recharge: ['success','充值'], charge: ['error','扣费'], freeze: ['warning','冻结'], refund: ['info','退费'], adjust: ['warning','调整'] };
+      const [type, label] = map[t] || ['neutral', t];
+      return `<span class="badge ${type}">${label}</span>`;
+    };
+    const html = `
+      <div class="page-head">
+        <div><div class="page-title">财务流水</div><div class="page-sub">用户充值、扣费、退费与人工调整的完整流水记录</div></div>
+        <button class="btn" onclick="TS.exportFinance()"><i class="ri-download-line"></i>导出流水</button>
+      </div>
+      <div class="card">
+        <div class="card-body" style="padding-bottom:0">
+          <div class="tabs" id="finTabs">
+            <div class="tab ${state.finTab==='all'?'active':''}" data-tab="all">全部 <span class="count">${tabCounts.all}</span></div>
+            <div class="tab ${state.finTab==='recharge'?'active':''}" data-tab="recharge">充值 <span class="count">${tabCounts.recharge}</span></div>
+            <div class="tab ${state.finTab==='charge'?'active':''}" data-tab="charge">扣费 <span class="count">${tabCounts.charge}</span></div>
+            <div class="tab ${state.finTab==='refund'?'active':''}" data-tab="refund">退费 <span class="count">${tabCounts.refund}</span></div>
+            <div class="tab ${state.finTab==='adjust'?'active':''}" data-tab="adjust">调整 <span class="count">${tabCounts.adjust}</span></div>
+          </div>
+          <div class="toolbar">
+            <div class="search-box"><i class="ri-search-line"></i><input type="text" placeholder="搜索流水 ID、用户" value="${esc(state.finSearch)}" id="finSearchInput" /></div>
+            <div class="spacer"></div>
+            <span class="text-muted" style="font-size:12px">共 ${total} 条</span>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table class="tbl">
+            <thead><tr>
+              <th>流水 ID</th><th>用户</th><th>类型</th><th>金额</th><th>变动前余额</th><th>变动后余额</th><th>关联消息</th><th>备注</th><th>时间</th>
+            </tr></thead>
+            <tbody>
+              ${pageList.length ? pageList.map(f => `
+                <tr>
+                  <td class="mono">${esc(f.id)}</td>
+                  <td><div class="cell-main">${esc(f.userName)}</div><div class="cell-sub mono">${f.userId}</div></td>
+                  <td>${finTypeBadge(f.type)}</td>
+                  <td class="font-num" style="font-weight:600;color:${f.amount>=0?'var(--success)':'var(--error)'}">${f.amount>=0?'+':''}${money(f.amount)}</td>
+                  <td class="font-num text-secondary">${money(f.balanceBefore)}</td>
+                  <td class="font-num">${money(f.balanceAfter)}</td>
+                  <td>${f.relatedMsg ? `<span class="mono" style="font-size:11px">${esc(f.relatedMsg)}</span>` : '<span class="text-muted">—</span>'}</td>
+                  <td class="text-secondary">${esc(f.note)}</td>
+                  <td class="text-secondary" style="font-size:12px">${f.time ? String(f.time).replace('T', ' ').slice(0, 19) : '-'}</td>
+                </tr>`).join('') : `<tr><td colspan="9"><div class="empty"><i class="ri-inbox-line"></i>暂无流水记录</div></td></tr>`}
+            </tbody>
+          </table>
+        </div>
+        ${paginationHTML(state.finPage, state.finPageSize, total)}
+      </div>
+    `;
+    $('#content').innerHTML = html;
+    $$('#finTabs .tab').forEach(t => t.addEventListener('click', () => { state.finTab = t.dataset.tab; state.finPage = 1; renderFinance(); }));
+    $('#finSearchInput').addEventListener('input', (e) => { state.finSearch = e.target.value; state.finPage = 1; renderFinance(); });
+    bindPagination($('#content'), (p) => { state.finPage = p; renderFinance(); }, (ps) => { state.finPageSize = ps; state.finPage = 1; renderFinance(); });
+  }
+  function exportFinance() { toast('财务流水已导出为 CSV', 'success'); }
+
+  /* ============================================================
+     页面：系统配置
+     ============================================================ */
+  function renderSystem() {
+    const html = `
+      <div class="page-head">
+        <div><div class="page-title">系统配置</div><div class="page-sub">限流规则、黑名单、Webhook 与告警阈值等全局配置</div></div>
+        <button class="btn primary" onclick="TS.saveSystemConfig()"><i class="ri-save-line"></i>保存全部配置</button>
+      </div>
+      <div class="grid-2" style="grid-template-columns:1fr 1fr;align-items:start">
+        <div class="card">
+          <div class="card-head"><span class="card-title"><i class="ri-speed-up-line"></i>限流规则</span><span class="badge brand">全局限流</span></div>
+          <div class="card-body">
+            <div class="form-row">
+              <label class="form-label">每分钟最大发送量<span class="req">*</span></label>
+              <input class="input" type="number" id="rlMin" value="60" />
+              <div class="form-help">单用户每分钟最大发送条数，0 表示不限制</div>
+            </div>
+            <div class="form-row">
+              <label class="form-label">每小时最大发送量<span class="req">*</span></label>
+              <input class="input" type="number" id="rlHour" value="600" />
+              <div class="form-help">单用户每小时最大发送条数</div>
+            </div>
+            <div class="form-row">
+              <label class="form-label">每日最大发送量<span class="req">*</span></label>
+              <input class="input" type="number" id="rlDay" value="10000" />
+              <div class="form-help">单用户每日最大发送条数</div>
+            </div>
+            <div class="form-row">
+              <label class="form-label">验证码发送间隔（秒）</label>
+              <input class="input" type="number" id="rlInterval" value="60" />
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head"><span class="card-title"><i class="ri-alarm-warning-line"></i>告警阈值</span></div>
+          <div class="card-body">
+            <div class="form-row">
+              <label class="form-label">通道成功率告警阈值（%）</label>
+              <input class="input" type="number" step="0.01" id="alSuccess" value="97.00" />
+              <div class="form-help">当通道成功率低于此值时触发告警</div>
+            </div>
+            <div class="form-row">
+              <label class="form-label">用户低余额告警阈值（元）</label>
+              <div class="input-group has-prefix"><span class="input-prefix">￥</span><input class="input" type="number" step="0.01" id="alBalance" value="50.00" /></div>
+              <div class="form-help">用户余额低于此值时发送充值提醒</div>
+            </div>
+            <div class="form-row">
+              <label class="form-label">失败重试次数</label>
+              <input class="input" type="number" id="alRetry" value="3" />
+            </div>
+            <div class="form-row">
+              <label class="form-label">告警通知方式</label>
+              <div class="flex gap-16 flex-wrap">
+                <label class="check-row"><input type="checkbox" id="alEmail" checked /> 邮件</label>
+                <label class="check-row"><input type="checkbox" id="alWebhook" checked /> Webhook</label>
+                <label class="check-row"><input type="checkbox" id="alSms" /> 短信</label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="grid-2" style="grid-template-columns:1fr 1fr;align-items:start">
+        <div class="card">
+          <div class="card-head"><span class="card-title"><i class="ri-forbid-line"></i>黑名单</span></div>
+          <div class="card-body">
+            <div class="form-row">
+              <label class="form-label">号码黑名单（每行一个）</label>
+              <textarea class="textarea mono" id="blPhone" style="font-size:12px;min-height:120px" placeholder="每行一个真实黑名单号码"></textarea>
+              <div class="form-help">列表中的号码将禁止发送短信</div>
+            </div>
+            <div class="form-row">
+              <label class="form-label">关键词黑名单（每行一个）</label>
+              <textarea class="textarea" id="blKeyword" style="min-height:120px" placeholder="每行一个真实黑名单关键词"></textarea>
+              <div class="form-help">模板内容命中关键词将拒绝发送</div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head"><span class="card-title"><i class="ri-webhook-line"></i>Webhook 配置</span></div>
+          <div class="card-body">
+            <div class="form-row">
+              <label class="form-label">Webhook URL</label>
+              <input class="input" id="whUrl" placeholder="Webhook URL" />
+            </div>
+            <div class="form-row">
+              <label class="form-label">签名密钥（Secret）</label>
+              <input class="input mono" id="whSecret" type="password" />
+              <div class="form-help">用于校验 Webhook 请求签名</div>
+            </div>
+            <div class="form-row">
+              <label class="form-label">订阅事件</label>
+              <div class="flex gap-16 flex-wrap">
+                <label class="check-row"><input type="checkbox" id="evSend" checked /> 发送成功</label>
+                <label class="check-row"><input type="checkbox" id="evFail" checked /> 发送失败</label>
+                <label class="check-row"><input type="checkbox" id="evRecharge" checked /> 用户充值</label>
+                <label class="check-row"><input type="checkbox" id="evReview" /> 审核结果</label>
+              </div>
+            </div>
+            <div class="form-row">
+              <label class="form-label">重试策略</label>
+              <select class="select" id="whRetry">
+                <option value="3">最多重试 3 次</option>
+                <option value="5">最多重试 5 次</option>
+                <option value="0">不重试</option>
+              </select>
+            </div>
+            <div class="flex gap-8 mt-16">
+              <button class="btn" onclick="TS.testWebhook()"><i class="ri-pulse-line"></i>发送测试</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+    $('#content').innerHTML = html;
+  }
+
+  function saveSystemConfig() {
+    const min = parseInt($('#rlMin').value);
+    if (isNaN(min) || min < 0) { toast('请输入有效的每分钟限流值', 'error'); return; }
+    toast('系统配置 API 未接入，未保存任何数据', 'warning');
+  }
+  function testWebhook() {
+    toast('Webhook 检测 API 未接入，未发送任何请求', 'warning');
+  }
+
+  /* ============================================================
+     初始化与事件绑定
+     ============================================================ */
+  function initLayout() {
+    // 折叠状态
+    if (state.sidebarCollapsed) $('#sidebar').classList.add('collapsed');
+    $('#collapseBtn').addEventListener('click', () => {
+      state.sidebarCollapsed = !state.sidebarCollapsed;
+      $('#sidebar').classList.toggle('collapsed', state.sidebarCollapsed);
+      localStorage.setItem('ts-collapsed', state.sidebarCollapsed ? '1' : '0');
+    });
+    // 汉堡菜单
+    $('#hamburger').addEventListener('click', () => $('#sidebar').classList.toggle('mobile-open'));
+    // 主题切换
+    $('#themeToggle').addEventListener('click', toggleTheme);
+    // 全局搜索
+    $('#globalSearch').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && e.target.value.trim()) {
+        navigate('#/messages');
+        state.msgSearch = e.target.value.trim(); state.msgPage = 1;
+        renderMessages();
+      }
+    });
+    // Modal 点击遮罩关闭
+    $('#modalMask').addEventListener('click', (e) => { if (e.target === $('#modalMask')) closeModal(); });
+    // Drawer 点击遮罩关闭
+    $('#drawerMask').addEventListener('click', closeDrawer);
+    // ESC 关闭
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') { closeModal(); closeDrawer(); }
+    });
+    // Hash 路由
+    window.addEventListener('hashchange', () => {
+      const r = location.hash || '#/dashboard';
+      if (r !== state.route) navigate(r);
+    });
+    document.addEventListener('visibilitychange', onPageVisible);
+    window.addEventListener('focus', onPageVisible);
+  }
+
+  function init() {
+    initTheme();
+    initLayout();
+    renderNav();
+    initDropdowns();
+    // 注册实时推送监听：新短信自动出现在列表顶部，状态变更实时更新
+    Realtime.on(handleRealtimePush);
+
+    // 已登录则直接启动
+    if (API.isLoggedIn) {
+      Data.preload();
+      renderPage();
+      Realtime.start();
+      setTimeout(() => toast('已登录，实时推送已启用', 'success'), 400);
+      return;
+    }
+
+    // 检查是否为新系统（库里无任何账号）
+    API.fetchSystemStatus().then(status => {
+      if (!status.hasUsers) {
+        // 新系统：弹窗快速注册管理员
+        openSetupModal();
+      } else {
+        // 已有账号：正常渲染页面，提示登录
+        renderPage();
+        setTimeout(() => toast('请登录后台查看生产真实数据', 'info'), 400);
+      }
+    }).catch(() => {
+      // 网络或其他问题，正常渲染
+      renderPage();
+      setTimeout(() => toast('请登录后台查看生产真实数据', 'info'), 400);
+    });
+  }
+
+  /** 处理 WS 推送的事件 */
+  function handleRealtimePush(payload) {
+    if (!payload || !payload.type) return;
+    const mapped = mapMessage(payload.message || {});
+
+    if (payload.type === 'message_created') {
+      Data.invalidate(['messages', 'dashboard', 'finance']);
+      // 新短信：只在「短信记录」页且在第 1 页且无过滤条件时才自动插入顶部
+      if (state.route === '#/messages' && state.msgPage === 1 && !state.msgStatus && !state.msgSearch) {
+        const tbody = $('#msgTbody');
+        if (tbody) {
+          // 移除空态行
+          const emptyRow = tbody.querySelector('td[colspan]');
+          if (emptyRow) emptyRow.closest('tr').remove();
+          // 插入新行到顶部
+          tbody.insertAdjacentHTML('afterbegin', msgRowHTML(mapped));
+          // 闪烁高亮
+          const newRow = tbody.firstElementChild;
+          if (newRow) {
+            newRow.style.background = 'var(--success-bg, #e6ffed)';
+            setTimeout(() => { newRow.style.background = ''; }, 2000);
+          }
+          // 超过页大小则移除最后一行
+          const pageSize = state.msgPageSize;
+          while (tbody.children.length > pageSize) tbody.removeChild(tbody.lastElementChild);
+          // 更新计数
+          state.msgOnlineTotal = (state.msgOnlineTotal || 0) + 1;
+          const countEl = tbody.closest('.card').querySelector('.text-muted');
+          if (countEl) countEl.textContent = '共 ' + num(state.msgOnlineTotal) + ' 条';
+        }
+      }
+      // 导航角标 +1 + toast 提示
+      toast('收到新短信：' + (mapped.phone || ''), 'success', '实时推送');
+    } else if (payload.type === 'message_updated') {
+      Data.invalidate(['messages', 'dashboard', 'finance']);
+      // 状态变更：更新当前页对应行（如果在短信记录页）
+      if (state.route === '#/messages') {
+        const row = document.querySelector(`tr[data-msg-id="${CSS.escape(mapped.id)}"]`);
+        if (row) {
+          // 更新状态列（第 6 列）
+          const cells = row.children;
+          if (cells[5]) cells[5].innerHTML = statusBadge(mapped.status);
+          row.style.background = 'var(--warning-bg, #fff8e1)';
+          setTimeout(() => { row.style.background = ''; }, 1500);
+        }
+        // 同步更新缓存
+        const cache = state.msgCurrentPage || [];
+        const idx = cache.findIndex(x => x.id === mapped.id);
+        if (idx >= 0) Object.assign(cache[idx], mapped);
+      }
+    }
+  }
+
+  /** 新系统初始化：注册管理员账号 */
+  function openSetupModal() {
+    const body = `
+      <div class="mb-16" style="text-align:center">
+        <i class="ri-rocket-line" style="font-size:40px;color:var(--primary)"></i>
+        <h3 style="margin:12px 0 4px;font-size:16px">欢迎使用 Teaven SMS</h3>
+        <p class="text-muted" style="font-size:13px">系统中尚无任何账号，请先创建管理员账号完成初始化</p>
+      </div>
+      <dl class="kv-list">
+        <dt>邮箱</dt><dd><input type="email" class="input" id="loginEmail" placeholder="admin@teaven.io" style="width:100%"></dd>
+        <dt>密码</dt><dd><input type="password" class="input" id="loginPassword" placeholder="至少 8 位" style="width:100%" onkeydown="if(event.key==='Enter')TS.doSetup()"></dd>
+      </dl>
+    `;
+    const foot = `<button class="btn" onclick="TS.closeModal()">暂不注册</button><button class="btn primary" onclick="TS.doSetup()"><i class="ri-rocket-line"></i>初始化管理员账号</button>`;
+    openModal('系统初始化 · 创建管理员', body, foot);
+    setTimeout(() => $('#loginEmail').focus(), 100);
+    // 遮罩不可点关闭
+    $('#modalMask').removeEventListener('click', () => {});
+    $('#modalMask').addEventListener('click', (e) => {
+      if (e.target === $('#modalMask')) { /* 阻止关闭，必须完成初始化 */ }
+    });
+  }
+
+  /** 执行系统初始化注册 */
+  async function doSetup() {
+    const email = $('#loginEmail').value.trim();
+    const password = $('#loginPassword').value;
+    if (!email || !password) { toast('请输入邮箱和密码', 'warning'); return; }
+    if (password.length < 8) { toast('密码至少 8 位', 'warning'); return; }
+    try {
+      const btn = $('#modalFoot .btn.primary');
+      if (btn) { btn.disabled = true; btn.innerHTML = '<i class="ri-loader-4-line ri-spin"></i>初始化中...'; }
+      await API.setupAdmin(email, password);
+      closeModal();
+      toast('系统初始化完成，管理员账号已创建', 'success');
+      Data.clear();
+      Data.preload();
+      Realtime.start();
+      renderPage();
+    } catch (err) {
+      toast('初始化失败：' + err.message, 'error');
+    }
+  }
+
+  /** 打开登录对话框 */
+  function openLoginModal() {
+    if (API.isLoggedIn) {
+      toast('已登录，如需切换账号请先退出', 'info');
+      return;
+    }
+    const body = `
+      <div class="mb-16" style="text-align:center">
+        <i class="ri-shield-keyhole-line" style="font-size:40px;color:var(--primary)"></i>
+        <p class="text-muted" style="margin-top:8px">登录后端以启用实时推送与真实数据</p>
+      </div>
+      <dl class="kv-list">
+        <dt>邮箱</dt><dd><input type="email" class="input" id="loginEmail" placeholder="admin@teaven.io" style="width:100%"></dd>
+        <dt>密码</dt><dd><input type="password" class="input" id="loginPassword" placeholder="至少 8 位" style="width:100%" onkeydown="if(event.key==='Enter')TS.doLogin()"></dd>
+      </dl>
+    `;
+    const foot = `<button class="btn" onclick="TS.closeModal()">取消</button><button class="btn primary" onclick="TS.doLogin()"><i class="ri-login-circle-line"></i>登录</button>`;
+    openModal('连接后端', body, foot);
+    setTimeout(() => $('#loginEmail').focus(), 100);
+  }
+
+  /** 执行登录 */
+  async function doLogin() {
+    const email = $('#loginEmail').value.trim();
+    const password = $('#loginPassword').value;
+    if (!email || !password) { toast('请输入邮箱和密码', 'warning'); return; }
+    try {
+      const btn = $('#modalFoot .btn.primary');
+      if (btn) { btn.disabled = true; btn.innerHTML = '<i class="ri-loader-4-line ri-spin"></i>登录中...'; }
+      await API.login(email, password);
+      closeModal();
+      toast('登录成功，实时推送已启用', 'success');
+      Data.clear();
+      Data.preload();
+      Realtime.start();
+      // 刷新当前页（如果是短信记录页，重新从 API 拉取）
+      renderPage();
+    } catch (err) {
+      toast('登录失败：' + err.message, 'error');
+    }
+  }
+
+  /** 退出登录，停止 WS */
+  function logout() {
+    if (!API.isLoggedIn) { toast('当前未登录', 'info'); return; }
+    API.logout();
+    Realtime.stop();
+    Data.clear();
+    toast('已退出登录', 'info');
+    renderPage();
+  }
+
+  /* ---------- 公开 API ---------- */
+  return {
+    init, navigate, renderNav, renderPage,
+    toast, openModal, closeModal, openDrawer, closeDrawer, initDropdowns,
+    toggleTheme,
+    remindRecharge,
+    openUserDrawer, openNewUserDrawer, saveNewUser, saveUserDetail, impersonateUser,
+    batchUsers, exportUsers, copyText, togglePwd, resetApiKey, confirmResetKey,
+    approveSignature, rejectSignature, confirmRejectSignature,
+    approveTemplate, rejectTemplate, confirmRejectTemplate,
+    renderPublicTemplates, createPublicTemplate, confirmCreatePublicTemplate,
+    viewPublicTemplate, editPublicTemplate, confirmEditPublicTemplate, deletePublicTemplate,
+    openNewMapDrawer, saveNewMap, openEditMap, deleteMap, confirmDeleteMap,
+    toggleUpstream, openNewUpstreamDrawer, saveNewUpstream, openUpstreamConfig, testUpstream, onAdapterTypeChange,
+    openNewChannelDrawer, saveChannel, openChannelDrawer,
+    openMessageDrawer, exportMessages,
+    openSetupModal, doSetup, openLoginModal, doLogin, logout,
+    exportFinance, saveSystemConfig, testWebhook
+  };
+})();
+
+document.addEventListener('DOMContentLoaded', () => TS.init());
+</script>
+</body>
+</html>

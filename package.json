@@ -1,0 +1,24 @@
+{
+  "name": "teaven-sms",
+  "version": "0.0.0-recovered",
+  "private": true,
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy src/index.ts",
+    "build": "wrangler deploy --dry-run src/index.ts",
+    "typecheck": "tsc --noEmit",
+    "db:migrate": "wrangler d1 migrations apply teaven-sms --remote"
+  },
+  "dependencies": {
+    "hono": "^4.4.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20260702.1",
+    "wrangler": "^3.60.0",
+    "typescript": "^5.5.0",
+    "eslint": "^9.0.0",
+    "@eslint/js": "^9.0.0",
+    "typescript-eslint": "^8.0.0",
+    "vitest": "^2.0.0"
+  }
+}

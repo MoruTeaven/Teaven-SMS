@@ -1,0 +1,2392 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Teaven SMS · 用户中心</title>
+<link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/remixicon/4.2.0/remixicon.css" />
+<script src="https://cdn.bootcdn.net/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  /* ============ 主题变量 ============ */
+  :root[data-theme="light"] {
+    --bg-primary: #FAF7F2;
+    --bg-secondary: #FFFFFF;
+    --bg-tertiary: #F3EDE3;
+    --border: #E8DFD3;
+    --border-strong: #D8CBB8;
+    --text-primary: #2D1F14;
+    --text-secondary: #6B5D4F;
+    --text-muted: #A89B8C;
+    --brand-900: #3D2817;
+    --brand-700: #6B4423;
+    --brand-500: #A0522D;
+    --brand-300: #D2B48C;
+    --brand-100: #F5E9D7;
+    --success: #2F855A;
+    --warning: #B7791F;
+    --error: #C53030;
+    --info: #2B6CB0;
+    --shadow-sm: 0 1px 2px rgba(61,40,23,0.06);
+    --shadow-md: 0 4px 12px rgba(61,40,23,0.08);
+    --shadow-lg: 0 12px 32px rgba(61,40,23,0.12);
+    --overlay: rgba(45,31,20,0.48);
+  }
+  :root[data-theme="dark"] {
+    --bg-primary: #1A1410;
+    --bg-secondary: #251C15;
+    --bg-tertiary: #2F241B;
+    --border: #3D2E22;
+    --border-strong: #4A3828;
+    --text-primary: #F5E9D7;
+    --text-secondary: #C4B5A0;
+    --text-muted: #8B7E6E;
+    --brand-900: #1F140A;
+    --brand-700: #D2B48C;
+    --brand-500: #C8956D;
+    --brand-300: #8B5E3C;
+    --brand-100: #3D2817;
+    --success: #48BB78;
+    --warning: #ECC94B;
+    --error: #FC8181;
+    --info: #63B3ED;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.4);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.45);
+    --shadow-lg: 0 12px 32px rgba(0,0,0,0.55);
+    --overlay: rgba(0,0,0,0.62);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    font-family: "PingFang SC", "Microsoft YaHei", "Inter", system-ui, -apple-system, sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-size: 14px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    transition: background-color .25s ease, color .25s ease;
+  }
+  a { color: inherit; text-decoration: none; }
+  button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+  input, select, textarea { font-family: inherit; font-size: 14px; color: inherit; }
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+
+  .num { font-variant-numeric: tabular-nums; font-feature-settings: "tnum"; }
+
+  /* ============ 布局 ============ */
+  .app { display: flex; min-height: 100vh; }
+  .aside {
+    width: 240px;
+    flex-shrink: 0;
+    background: var(--bg-secondary);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0; bottom: 0; left: 0;
+    z-index: 60;
+    transition: width .25s ease, transform .25s ease;
+  }
+  .aside.collapsed { width: 72px; }
+  .aside-brand {
+    height: 64px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 20px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .brand-logo {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, var(--brand-700), var(--brand-500));
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-weight: 700; font-size: 16px;
+    flex-shrink: 0;
+  }
+  .brand-name { font-weight: 700; font-size: 16px; color: var(--text-primary); white-space: nowrap; }
+  .brand-name small { display: block; font-size: 11px; font-weight: 400; color: var(--text-muted); letter-spacing: .5px; }
+  .aside.collapsed .brand-name, .aside.collapsed .nav-label, .aside.collapsed .nav-section-title, .aside.collapsed .nav-badge { display: none; }
+  .aside.collapsed .nav-item { justify-content: center; padding: 10px; }
+
+  .nav { flex: 1; overflow-y: auto; padding: 12px 12px; }
+  .nav-section-title {
+    font-size: 11px; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 1px;
+    padding: 12px 12px 6px; font-weight: 600;
+  }
+  .nav-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 12px; border-radius: 8px;
+    color: var(--text-secondary);
+    cursor: pointer; margin-bottom: 2px;
+    transition: all .15s ease;
+    position: relative; white-space: nowrap;
+  }
+  .nav-item i { font-size: 18px; flex-shrink: 0; }
+  .nav-item:hover { background: var(--bg-tertiary); color: var(--text-primary); }
+  .nav-item.active { background: var(--brand-100); color: var(--brand-700); font-weight: 600; }
+  :root[data-theme="dark"] .nav-item.active { background: rgba(200,149,109,0.15); color: var(--brand-700); }
+  .nav-label { flex: 1; }
+  .nav-badge {
+    font-size: 11px; padding: 1px 7px; border-radius: 10px;
+    background: var(--brand-500); color: #fff; font-weight: 600;
+  }
+
+  .aside-footer { padding: 12px; border-top: 1px solid var(--border); flex-shrink: 0; }
+  .user-mini {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px; border-radius: 8px; cursor: pointer;
+  }
+  .user-mini:hover { background: var(--bg-tertiary); }
+  .avatar {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--brand-500), var(--brand-700));
+    color: #fff; display: flex; align-items: center; justify-content: center;
+    font-weight: 600; font-size: 13px; flex-shrink: 0;
+  }
+  .aside.collapsed .user-mini-text { display: none; }
+  .user-mini-text { overflow: hidden; }
+  .user-mini-name { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+  .user-mini-plan { font-size: 11px; color: var(--text-muted); }
+
+  .main-wrap { flex: 1; margin-left: 240px; display: flex; flex-direction: column; min-width: 0; transition: margin-left .25s ease; }
+  .aside.collapsed ~ .main-wrap { margin-left: 72px; }
+
+  .header {
+    height: 64px;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 16px;
+    padding: 0 24px;
+    position: sticky; top: 0; z-index: 50;
+  }
+  .icon-btn {
+    width: 36px; height: 36px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text-secondary); cursor: pointer;
+    transition: all .15s;
+  }
+  .icon-btn:hover { background: var(--bg-tertiary); color: var(--text-primary); }
+  .breadcrumb { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-muted); flex: 1; min-width: 0; }
+  .breadcrumb .crumb-current { color: var(--text-primary); font-weight: 600; }
+  .breadcrumb i { font-size: 12px; }
+  .header-right { display: flex; align-items: center; gap: 8px; }
+  .balance-pill {
+    display: flex; align-items: center; gap: 6px;
+    padding: 6px 12px; border-radius: 8px;
+    background: var(--brand-100); color: var(--brand-700);
+    font-size: 13px; font-weight: 600;
+  }
+  :root[data-theme="dark"] .balance-pill { background: rgba(200,149,109,0.12); }
+
+  .main { flex: 1; padding: 24px; overflow-y: auto; }
+  .route-pane { display: none; }
+  .route-pane.active { display: block; }
+  .page { display: none; animation: fadeIn .25s ease; }
+  .page.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+  .page-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }
+  .page-title { font-size: 22px; font-weight: 700; color: var(--text-primary); }
+  .page-subtitle { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
+  .page-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  .footer {
+    border-top: 1px solid var(--border);
+    padding: 16px 24px;
+    font-size: 12px; color: var(--text-muted);
+    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;
+    background: var(--bg-secondary);
+  }
+  .footer a { color: var(--text-secondary); }
+  .footer a:hover { color: var(--brand-500); }
+
+  /* ============ 通用组件 ============ */
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 14px; border-radius: 8px;
+    font-size: 13px; font-weight: 500;
+    border: 1px solid var(--border);
+    background: var(--bg-secondary); color: var(--text-primary);
+    transition: all .15s; white-space: nowrap;
+  }
+  .btn:hover { border-color: var(--border-strong); background: var(--bg-tertiary); }
+  .btn-primary { background: var(--brand-700); color: #fff; border-color: var(--brand-700); }
+  .btn-primary:hover { background: var(--brand-900); border-color: var(--brand-900); }
+  :root[data-theme="dark"] .btn-primary { background: var(--brand-500); border-color: var(--brand-500); color: #1A1410; }
+  :root[data-theme="dark"] .btn-primary:hover { background: var(--brand-700); border-color: var(--brand-700); color: #1A1410; }
+  .btn-ghost { background: transparent; border-color: transparent; }
+  .btn-ghost:hover { background: var(--bg-tertiary); }
+  .btn-danger { color: var(--error); border-color: var(--border); }
+  .btn-danger:hover { background: rgba(197,48,48,0.08); border-color: var(--error); }
+  .btn-sm { padding: 5px 10px; font-size: 12px; }
+  .btn:disabled { opacity: .5; cursor: not-allowed; }
+
+  .card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    transition: box-shadow .2s, transform .2s, border-color .2s;
+  }
+  .card-hover:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+  .card-pad { padding: 20px; }
+  .card-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .card-title { font-size: 15px; font-weight: 600; color: var(--text-primary); }
+  .card-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+  .grid { display: grid; gap: 16px; }
+  .grid-4 { grid-template-columns: repeat(4, 1fr); }
+  .grid-3 { grid-template-columns: repeat(3, 1fr); }
+  .grid-2 { grid-template-columns: repeat(2, 1fr); }
+  @media (max-width: 1279px) { .grid-4 { grid-template-columns: repeat(2, 1fr); } .grid-3 { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 767px) { .grid-4, .grid-3, .grid-2 { grid-template-columns: 1fr; } }
+
+  .stat-card { padding: 20px; }
+  .stat-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .stat-label { font-size: 12px; color: var(--text-muted); font-weight: 500; }
+  .stat-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+  .stat-icon.brand { background: var(--brand-100); color: var(--brand-700); }
+  .stat-icon.success { background: rgba(47,133,90,0.12); color: var(--success); }
+  .stat-icon.warning { background: rgba(183,121,31,0.12); color: var(--warning); }
+  .stat-icon.info { background: rgba(43,108,176,0.12); color: var(--info); }
+  :root[data-theme="dark"] .stat-icon.brand { background: rgba(200,149,109,0.15); }
+  .stat-value { font-size: 28px; font-weight: 700; color: var(--text-primary); line-height: 1.2; }
+  .stat-trend { display: inline-flex; align-items: center; gap: 3px; font-size: 12px; font-weight: 600; margin-top: 6px; }
+  .stat-trend.up { color: var(--success); }
+  .stat-trend.down { color: var(--error); }
+  .stat-foot { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; }
+  .stat-foot-text { font-size: 11px; color: var(--text-muted); }
+  .spark-wrap { width: 80px; height: 32px; }
+
+  .badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 600; line-height: 1.4; }
+  .badge::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .badge.success { background: rgba(47,133,90,0.12); color: var(--success); }
+  .badge.warning { background: rgba(183,121,31,0.12); color: var(--warning); }
+  .badge.error { background: rgba(197,48,48,0.12); color: var(--error); }
+  .badge.info { background: rgba(43,108,176,0.12); color: var(--info); }
+  .badge.neutral { background: var(--bg-tertiary); color: var(--text-secondary); }
+  :root[data-theme="dark"] .badge.success { background: rgba(72,187,120,0.15); }
+  :root[data-theme="dark"] .badge.warning { background: rgba(236,201,75,0.15); }
+  :root[data-theme="dark"] .badge.error { background: rgba(252,129,129,0.15); }
+  :root[data-theme="dark"] .badge.info { background: rgba(99,179,237,0.15); }
+
+  /* ============ 表格 ============ */
+  .table-wrap { overflow-x: auto; }
+  table.tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
+  table.tbl th, table.tbl td { padding: 12px 16px; text-align: left; vertical-align: middle; }
+  table.tbl thead th {
+    position: sticky; top: 0; z-index: 2;
+    background: var(--bg-tertiary); color: var(--text-secondary);
+    font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .4px;
+    border-bottom: 1px solid var(--border); white-space: nowrap;
+  }
+  table.tbl tbody tr { border-bottom: 1px solid var(--border); transition: background .15s; }
+  table.tbl tbody tr:hover { background: var(--brand-100); }
+  :root[data-theme="dark"] table.tbl tbody tr:hover { background: rgba(200,149,109,0.06); }
+  table.tbl tbody tr:last-child { border-bottom: none; }
+  table.tbl td.mono, table.tbl th.mono { font-family: "SF Mono", "Consolas", monospace; font-size: 12px; }
+  .row-actions { display: flex; gap: 4px; }
+  .tbl-checkbox { width: 16px; height: 16px; accent-color: var(--brand-700); }
+
+  .toolbar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+  .search-box { position: relative; flex: 1; min-width: 200px; max-width: 320px; }
+  .search-box i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 16px; }
+  .search-box input { width: 100%; padding: 8px 12px 8px 36px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-secondary); color: var(--text-primary); }
+  .search-box input:focus { outline: none; border-color: var(--brand-500); box-shadow: 0 0 0 3px rgba(160,82,45,0.12); }
+
+  .select {
+    padding: 8px 30px 8px 12px; border-radius: 8px; border: 1px solid var(--border);
+    background: var(--bg-secondary); color: var(--text-primary); cursor: pointer;
+    appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236B5D4F' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 10px center;
+  }
+  .select:focus { outline: none; border-color: var(--brand-500); }
+
+  /* ============ Tabs ============ */
+  .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin-bottom: 20px; position: relative; }
+  .tab {
+    padding: 10px 16px; font-size: 13px; font-weight: 500;
+    color: var(--text-secondary); cursor: pointer; position: relative;
+    border-bottom: 2px solid transparent; margin-bottom: -1px;
+    transition: all .15s;
+  }
+  .tab:hover { color: var(--text-primary); }
+  .tab.active { color: var(--brand-700); border-bottom-color: var(--brand-700); font-weight: 600; }
+  :root[data-theme="dark"] .tab.active { color: var(--brand-500); border-bottom-color: var(--brand-500); }
+  .tab-pane { display: none; }
+  .tab-pane.active { display: block; animation: fadeIn .2s; }
+
+  /* ============ Form ============ */
+  .form-group { margin-bottom: 16px; }
+  .form-label { display: block; font-size: 13px; font-weight: 500; color: var(--text-primary); margin-bottom: 6px; }
+  .form-label .req { color: var(--error); margin-left: 2px; }
+  .form-help { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+  .form-error { font-size: 12px; color: var(--error); margin-top: 4px; display: none; }
+  .form-group.has-error .form-error { display: block; }
+  .form-group.has-error .input, .form-group.has-error .select, .form-group.has-error textarea {
+    border-color: var(--error); box-shadow: 0 0 0 3px rgba(197,48,48,0.1);
+  }
+  .input, textarea.input {
+    width: 100%; padding: 9px 12px; border-radius: 8px; border: 1px solid var(--border);
+    background: var(--bg-secondary); color: var(--text-primary);
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .input:focus, textarea.input:focus { outline: none; border-color: var(--brand-500); box-shadow: 0 0 0 3px rgba(160,82,45,0.12); }
+  textarea.input { resize: vertical; min-height: 88px; font-family: inherit; }
+  .input-group { display: flex; align-items: stretch; }
+  .input-group .input { border-radius: 8px 0 0 8px; }
+  .input-group .input-suffix { padding: 9px 12px; background: var(--bg-tertiary); border: 1px solid var(--border); border-left: none; border-radius: 0 8px 8px 0; color: var(--text-muted); font-size: 12px; white-space: nowrap; display: flex; align-items: center; }
+
+  .radio-row, .check-row { display: flex; flex-direction: column; gap: 8px; }
+  .radio-row.inline, .check-row.inline { flex-direction: row; gap: 16px; flex-wrap: wrap; }
+  .radio-item, .check-item { display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 13px; }
+  .radio-item input, .check-item input { width: 16px; height: 16px; accent-color: var(--brand-700); }
+
+  .switch { position: relative; display: inline-block; width: 38px; height: 22px; flex-shrink: 0; }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .switch-slider { position: absolute; cursor: pointer; inset: 0; background: var(--border-strong); border-radius: 22px; transition: .25s; }
+  .switch-slider::before { content: ""; position: absolute; height: 16px; width: 16px; left: 3px; bottom: 3px; background: #fff; border-radius: 50%; transition: .25s; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+  .switch input:checked + .switch-slider { background: var(--brand-700); }
+  .switch input:checked + .switch-slider::before { transform: translateX(16px); }
+
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 640px) { .form-row { grid-template-columns: 1fr; } }
+
+  /* ============ Modal / Drawer ============ */
+  .overlay { position: fixed; inset: 0; background: var(--overlay); z-index: 100; opacity: 0; pointer-events: none; transition: opacity .25s; backdrop-filter: blur(2px); }
+  .overlay.show { opacity: 1; pointer-events: auto; }
+  .modal {
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -48%) scale(.96);
+    background: var(--bg-secondary); border-radius: 12px; box-shadow: var(--shadow-lg);
+    z-index: 110; width: 480px; max-width: calc(100vw - 32px); max-height: calc(100vh - 64px);
+    opacity: 0; pointer-events: none; transition: all .25s cubic-bezier(.16,1,.3,1); display: flex; flex-direction: column;
+  }
+  .modal.show { opacity: 1; pointer-events: auto; transform: translate(-50%, -50%) scale(1); }
+  .modal-head { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .modal-title { font-size: 16px; font-weight: 600; }
+  .modal-body { padding: 20px; overflow-y: auto; flex: 1; }
+  .modal-foot { padding: 12px 20px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 8px; }
+
+  .drawer {
+    position: fixed; top: 0; right: 0; bottom: 0; width: 480px; max-width: 100vw;
+    background: var(--bg-secondary); box-shadow: var(--shadow-lg); z-index: 110;
+    transform: translateX(100%); transition: transform .3s cubic-bezier(.16,1,.3,1);
+    display: flex; flex-direction: column;
+  }
+  .drawer.show { transform: translateX(0); }
+  .drawer-head { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .drawer-title { font-size: 16px; font-weight: 600; }
+  .drawer-body { padding: 20px; overflow-y: auto; flex: 1; }
+  .drawer-foot { padding: 12px 20px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 8px; }
+
+  /* ============ Toast ============ */
+  .toast-stack { position: fixed; top: 80px; right: 24px; z-index: 200; display: flex; flex-direction: column; gap: 8px; }
+  .toast {
+    min-width: 260px; max-width: 360px; padding: 12px 16px; border-radius: 8px;
+    background: var(--bg-secondary); border: 1px solid var(--border); box-shadow: var(--shadow-md);
+    display: flex; align-items: flex-start; gap: 10px;
+    animation: toastIn .25s ease; font-size: 13px;
+  }
+  @keyframes toastIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: none; } }
+  .toast.out { animation: toastOut .25s ease forwards; }
+  @keyframes toastOut { to { opacity: 0; transform: translateX(20px); } }
+  .toast i.lead { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+  .toast.success i.lead { color: var(--success); }
+  .toast.error i.lead { color: var(--error); }
+  .toast.info i.lead { color: var(--info); }
+  .toast.warning i.lead { color: var(--warning); }
+  .toast-content { flex: 1; }
+  .toast-title { font-weight: 600; }
+  .toast-desc { color: var(--text-muted); font-size: 12px; margin-top: 2px; }
+
+  /* ============ Dropdown ============ */
+  .dropdown { position: relative; }
+  .dropdown-menu {
+    position: absolute; top: calc(100% + 6px); right: 0; min-width: 180px;
+    background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 8px;
+    box-shadow: var(--shadow-md); padding: 6px; z-index: 80;
+    opacity: 0; pointer-events: none; transform: translateY(-4px); transition: all .15s;
+  }
+  .dropdown.open .dropdown-menu { opacity: 1; pointer-events: auto; transform: none; }
+  .dropdown-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 6px; font-size: 13px; cursor: pointer; color: var(--text-primary); }
+  .dropdown-item:hover { background: var(--bg-tertiary); }
+  .dropdown-item.danger { color: var(--error); }
+  .dropdown-divider { height: 1px; background: var(--border); margin: 4px 0; }
+
+  /* ============ Tooltip ============ */
+  [data-tip] { position: relative; }
+  [data-tip]::after {
+    content: attr(data-tip); position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%);
+    background: var(--brand-900); color: #F5E9D7; padding: 4px 10px; border-radius: 6px;
+    font-size: 12px; white-space: nowrap; opacity: 0; pointer-events: none;
+    transition: opacity .2s ease .3s; z-index: 90;
+  }
+  :root[data-theme="dark"] [data-tip]::after { background: var(--brand-100); color: var(--brand-900); }
+  [data-tip]:hover::after { opacity: 1; }
+
+  /* ============ Pagination ============ */
+  .pagination { display: flex; align-items: center; gap: 4px; justify-content: space-between; margin-top: 16px; flex-wrap: wrap; }
+  .pagination-info { font-size: 12px; color: var(--text-muted); }
+  .pagination-controls { display: flex; align-items: center; gap: 4px; }
+  .page-btn { min-width: 32px; height: 32px; padding: 0 8px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-secondary); color: var(--text-secondary); font-size: 13px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
+  .page-btn:hover:not(:disabled) { border-color: var(--brand-500); color: var(--brand-500); }
+  .page-btn.active { background: var(--brand-700); color: #fff; border-color: var(--brand-700); }
+  :root[data-theme="dark"] .page-btn.active { background: var(--brand-500); color: #1A1410; border-color: var(--brand-500); }
+  .page-btn:disabled { opacity: .4; cursor: not-allowed; }
+  .page-jump { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-muted); }
+  .page-jump input { width: 48px; padding: 4px 6px; text-align: center; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-secondary); color: var(--text-primary); }
+
+  /* ============ 发送预览 ============ */
+  .sms-preview {
+    background: var(--bg-tertiary); border-radius: 12px; padding: 16px;
+    border: 1px solid var(--border);
+  }
+  .sms-preview-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .sms-preview-label { font-size: 12px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: .5px; }
+  .sms-bubble {
+    background: var(--bg-secondary); border-radius: 12px; padding: 14px;
+    font-size: 14px; line-height: 1.6; color: var(--text-primary);
+    border: 1px solid var(--border); position: relative;
+  }
+  .sms-bubble .sig { color: var(--brand-700); font-weight: 600; }
+  :root[data-theme="dark"] .sms-bubble .sig { color: var(--brand-500); }
+  .sms-meta { display: flex; gap: 12px; margin-top: 12px; font-size: 11px; color: var(--text-muted); flex-wrap: wrap; }
+  .sms-meta span { display: inline-flex; align-items: center; gap: 4px; }
+
+  .empty { text-align: center; padding: 48px 20px; color: var(--text-muted); }
+  .empty i { font-size: 36px; margin-bottom: 12px; display: block; }
+
+  .divider { height: 1px; background: var(--border); margin: 16px 0; }
+
+  .kv { display: flex; gap: 8px; font-size: 13px; padding: 6px 0; }
+  .kv-k { color: var(--text-muted); min-width: 96px; flex-shrink: 0; }
+  .kv-v { color: var(--text-primary); word-break: break-all; }
+
+  .code-block {
+    font-family: "SF Mono", "Consolas", monospace; font-size: 12px;
+    background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 8px;
+    padding: 10px 12px; color: var(--text-primary); word-break: break-all;
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  }
+  .copy-btn { color: var(--text-muted); cursor: pointer; padding: 4px; border-radius: 4px; }
+  .copy-btn:hover { color: var(--brand-500); background: var(--bg-secondary); }
+
+  /* ============ 移动端 ============ */
+  .hamburger { display: none; }
+  .scrim { display: none; position: fixed; inset: 0; background: var(--overlay); z-index: 55; opacity: 0; pointer-events: none; transition: opacity .25s; }
+  .scrim.show { opacity: 1; pointer-events: auto; }
+
+  @media (max-width: 1023px) {
+    .aside { transform: translateX(-100%); box-shadow: var(--shadow-lg); }
+    .aside.mobile-open { transform: translateX(0); }
+    .aside.collapsed { width: 240px; }
+    .aside.collapsed .brand-name, .aside.collapsed .nav-label, .aside.collapsed .nav-section-title, .aside.collapsed .nav-badge { display: block; }
+    .aside.collapsed .nav-item { justify-content: flex-start; padding: 10px 12px; }
+    .main-wrap { margin-left: 0 !important; }
+    .hamburger { display: flex; }
+    .scrim { display: block; }
+  }
+  @media (max-width: 767px) {
+    .header { padding: 0 16px; gap: 8px; }
+    .main { padding: 16px; }
+    .balance-pill .balance-text { display: none; }
+    .page-title { font-size: 18px; }
+    .drawer, .modal { width: 100vw; max-width: 100vw; }
+    .drawer { border-radius: 0; }
+  }
+
+  .chip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 6px; background: var(--bg-tertiary); color: var(--text-secondary); font-size: 11px; font-weight: 500; }
+
+  .chart-wrap { position: relative; height: 280px; }
+  .chart-wrap-sm { position: relative; height: 200px; }
+
+  .seg { display: inline-flex; background: var(--bg-tertiary); border-radius: 8px; padding: 3px; gap: 2px; }
+  .seg-item { padding: 5px 12px; border-radius: 6px; font-size: 12px; color: var(--text-secondary); cursor: pointer; font-weight: 500; }
+  .seg-item.active { background: var(--bg-secondary); color: var(--text-primary); box-shadow: var(--shadow-sm); }
+
+  .notice { display: flex; gap: 10px; padding: 12px 14px; border-radius: 8px; font-size: 13px; align-items: flex-start; }
+  .notice.info { background: rgba(43,108,176,0.08); color: var(--info); }
+  .notice.warning { background: rgba(183,121,31,0.08); color: var(--warning); }
+  .notice i { font-size: 16px; margin-top: 1px; }
+
+  .stat-grid-overview { display: grid; grid-template-columns: 1.4fr 1fr; gap: 16px; }
+  @media (max-width: 1023px) { .stat-grid-overview { grid-template-columns: 1fr; } }
+
+  .balance-card {
+    background: linear-gradient(135deg, var(--brand-700), var(--brand-900));
+    color: #F5E9D7; border-radius: 12px; padding: 24px; position: relative; overflow: hidden;
+  }
+  :root[data-theme="dark"] .balance-card { background: linear-gradient(135deg, var(--brand-500), var(--brand-700)); color: #1A1410; }
+  .balance-card::after { content: ""; position: absolute; right: -40px; top: -40px; width: 160px; height: 160px; border-radius: 50%; background: rgba(255,255,255,0.06); }
+  .balance-label { font-size: 13px; opacity: .85; margin-bottom: 8px; }
+  .balance-amount { font-size: 34px; font-weight: 700; line-height: 1.1; }
+  .balance-amount small { font-size: 16px; font-weight: 500; opacity: .8; }
+  .balance-meta { display: flex; gap: 16px; margin-top: 16px; font-size: 12px; opacity: .85; flex-wrap: wrap; }
+  .balance-actions { display: flex; gap: 8px; margin-top: 16px; }
+  .balance-actions .btn { background: rgba(255,255,255,0.15); color: inherit; border-color: rgba(255,255,255,0.25); }
+  .balance-actions .btn:hover { background: rgba(255,255,255,0.25); border-color: rgba(255,255,255,0.4); }
+  :root[data-theme="dark"] .balance-actions .btn { background: rgba(26,20,16,0.2); border-color: rgba(26,20,16,0.3); }
+
+  .tag-var { display: inline-block; padding: 1px 6px; margin: 2px; border-radius: 4px; background: var(--brand-100); color: var(--brand-700); font-size: 11px; font-family: monospace; }
+  :root[data-theme="dark"] .tag-var { background: rgba(200,149,109,0.15); color: var(--brand-500); }
+
+  /* ============ 登录页 ============ */
+  .login-wrap {
+    position: fixed; inset: 0; z-index: 200;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--bg-primary);
+    padding: 20px;
+  }
+  .login-card {
+    width: 400px; max-width: 100%;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    box-shadow: var(--shadow-lg);
+    padding: 40px 32px;
+  }
+  .login-brand { display: flex; align-items: center; gap: 12px; margin-bottom: 28px; justify-content: center; }
+  .login-brand .brand-logo { width: 40px; height: 40px; font-size: 20px; }
+  .login-brand .brand-name { font-size: 20px; }
+  .login-tabs { display: flex; gap: 4px; background: var(--bg-tertiary); border-radius: 8px; padding: 3px; margin-bottom: 24px; }
+  .login-tab { flex: 1; text-align: center; padding: 8px; border-radius: 6px; font-size: 13px; font-weight: 500; color: var(--text-secondary); cursor: pointer; transition: all .15s; }
+  .login-tab.active { background: var(--bg-secondary); color: var(--text-primary); box-shadow: var(--shadow-sm); }
+  .login-pane { display: none; }
+  .login-pane.active { display: block; }
+  .login-error { font-size: 12px; color: var(--error); margin-top: 12px; padding: 8px 12px; background: rgba(197,48,48,0.08); border-radius: 6px; display: none; }
+  .login-error.show { display: block; }
+  .login-foot { text-align: center; margin-top: 20px; font-size: 12px; color: var(--text-muted); }
+
+  /* ============ 加载 / 错误 ============ */
+  .loading-box { text-align: center; padding: 80px 20px; color: var(--text-muted); }
+  .loading-box i { font-size: 32px; display: block; margin-bottom: 12px; animation: spin 1s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .error-box { text-align: center; padding: 60px 20px; color: var(--error); }
+  .error-box i { font-size: 32px; display: block; margin-bottom: 12px; }
+  .error-box button { margin-top: 16px; }
+</style>
+</head>
+<body>
+<!-- ============ 全局 Loading ============ -->
+<div id="globalLoading" style="position:fixed;inset:0;z-index:300;display:flex;align-items:center;justify-content:center;background:var(--bg-primary);transition:opacity .3s">
+<div class="loading-box"><i class="ri-loader-4-line"></i>加载中…</div>
+</div>
+
+<!-- ============ 登录页 ============ -->
+<div class="login-wrap" id="loginWrap">
+  <div class="login-card">
+    <div class="login-brand">
+      <div class="brand-logo">T</div>
+      <div class="brand-name">Teaven SMS<small>用户中心</small></div>
+    </div>
+    <div class="login-tabs">
+      <div class="login-tab active" data-tab="login">登录</div>
+      <div class="login-tab" data-tab="register">注册</div>
+    </div>
+    <div class="login-pane active" id="pane-login">
+      <div class="form-group">
+        <label class="form-label">邮箱</label>
+        <input class="input" id="loginEmail" type="email" placeholder="邮箱地址" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">密码</label>
+        <input class="input" id="loginPassword" type="password" placeholder="至少 8 位" />
+      </div>
+      <div class="login-error" id="loginError"></div>
+      <button class="btn btn-primary" id="loginSubmit" style="width:100%; justify-content:center; margin-top:8px"><i class="ri-login-circle-line"></i> 登录</button>
+    </div>
+    <div class="login-pane" id="pane-register">
+      <div class="form-group">
+        <label class="form-label">邮箱</label>
+        <input class="input" id="regEmail" type="email" placeholder="邮箱地址" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">密码</label>
+        <input class="input" id="regPassword" type="password" placeholder="至少 8 位，含字母与数字" />
+        <div class="form-help">至少 8 位</div>
+      </div>
+      <div class="login-error" id="regError"></div>
+      <button class="btn btn-primary" id="regSubmit" style="width:100%; justify-content:center; margin-top:8px"><i class="ri-user-add-line"></i> 注册</button>
+    </div>
+    <div class="login-foot">© 2026 Teaven SMS · 基于 Cloudflare 全球边缘网络构建</div>
+  </div>
+</div>
+
+<div class="app" id="appShell" style="display:none">
+  <!-- ============ 侧边栏 ============ -->
+  <aside class="aside" id="aside">
+    <div class="aside-brand">
+      <div class="brand-logo">T</div>
+      <div class="brand-name">Teaven SMS<small>用户中心</small></div>
+    </div>
+    <nav class="nav" id="nav">
+      <div class="nav-section-title">概览</div>
+      <div class="nav-item active" data-route="#/overview">
+        <i class="ri-dashboard-3-line"></i><span class="nav-label">概览面板</span>
+      </div>
+      <div class="nav-section-title">短信服务</div>
+      <div class="nav-item" data-route="#/send">
+        <i class="ri-send-plane-fill"></i><span class="nav-label">发送短信</span>
+      </div>
+      <div class="nav-item" data-route="#/messages">
+        <i class="ri-mail-list-3-line"></i><span class="nav-label">短信记录</span>
+      </div>
+      <div class="nav-section-title">资源管理</div>
+      <div class="nav-item" data-route="#/signatures">
+        <i class="ri-shield-check-line"></i><span class="nav-label">签名管理</span>
+      </div>
+      <div class="nav-item" data-route="#/templates">
+        <i class="ri-file-list-3-line"></i><span class="nav-label">模板管理</span>
+      </div>
+      <div class="nav-section-title">开发与财务</div>
+      <div class="nav-item" data-route="#/api-keys">
+        <i class="ri-key-2-line"></i><span class="nav-label">API Key</span>
+      </div>
+      <div class="nav-item" data-route="#/billing">
+        <i class="ri-wallet-3-line"></i><span class="nav-label">账单中心</span>
+      </div>
+      <div class="nav-section-title">账户</div>
+      <div class="nav-item" data-route="#/settings">
+        <i class="ri-settings-3-line"></i><span class="nav-label">个人设置</span>
+      </div>
+    </nav>
+    <div class="aside-footer">
+      <div class="user-mini" id="userMini">
+        <div class="avatar" id="sidebarAvatar">U</div>
+        <div class="user-mini-text">
+          <div class="user-mini-name" id="sidebarUserName">用户</div>
+          <div class="user-mini-plan" id="sidebarUserRole">—</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="scrim" id="scrim"></div>
+
+  <!-- ============ 主区域 ============ -->
+  <div class="main-wrap">
+    <header class="header">
+      <button class="icon-btn hamburger" id="hamburger"><i class="ri-menu-line" style="font-size:20px"></i></button>
+      <button class="icon-btn" id="collapseBtn" data-tip="折叠侧边栏"><i class="ri-sidebar-fold-line" style="font-size:18px"></i></button>
+      <div class="breadcrumb" id="breadcrumb">
+        <i class="ri-home-4-line"></i><span>首页</span><i class="ri-arrow-right-s-line"></i><span class="crumb-current">概览面板</span>
+      </div>
+      <div class="header-right">
+        <div class="balance-pill" data-tip="账户余额">
+          <i class="ri-coin-line"></i>
+          <span class="num balance-text" id="headerBalance">¥0.00</span>
+        </div>
+        <div class="dropdown" id="themeDropdown">
+          <button class="icon-btn" id="themeBtn" data-tip="切换主题"><i class="ri-sun-line" id="themeIcon" style="font-size:18px"></i></button>
+          <div class="dropdown-menu" style="min-width:160px">
+            <div class="dropdown-item" data-theme-set="light"><i class="ri-sun-line"></i> 浅色模式</div>
+            <div class="dropdown-item" data-theme-set="dark"><i class="ri-moon-line"></i> 深色模式</div>
+            <div class="dropdown-item" data-theme-set="system"><i class="ri-contrast-2-line"></i> 跟随系统</div>
+          </div>
+        </div>
+        <div class="dropdown" id="userDropdown">
+          <button class="icon-btn" style="padding:0"><div class="avatar" id="headerAvatar">U</div></button>
+          <div class="dropdown-menu">
+            <div style="padding:8px 10px; border-bottom:1px solid var(--border); margin-bottom:4px">
+              <div style="font-weight:600; font-size:13px" id="dropdownUserName">用户</div>
+              <div style="font-size:12px; color:var(--text-muted)" id="dropdownUserEmail">—</div>
+            </div>
+            <div class="dropdown-item" data-route="#/settings"><i class="ri-user-3-line"></i> 个人设置</div>
+            <div class="dropdown-item" data-route="#/billing"><i class="ri-wallet-3-line"></i> 账单中心</div>
+            <div class="dropdown-item" data-route="#/api-keys"><i class="ri-key-2-line"></i> API 密钥</div>
+            <div class="dropdown-divider"></div>
+            <div class="dropdown-item danger" id="logoutBtn"><i class="ri-logout-box-r-line"></i> 退出登录</div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="main" id="main">
+      <div id="pageHost"></div>
+    </main>
+
+    <footer class="footer">
+      <div>© 2026 Teaven SMS · 基于 Cloudflare 全球边缘网络构建</div>
+      <div style="display:flex; gap:16px">
+        <a href="javascript:void(0)">服务协议</a>
+        <a href="javascript:void(0)">隐私政策</a>
+        <a href="javascript:void(0)">API 文档</a>
+        <a href="javascript:void(0)">状态页</a>
+      </div>
+    </footer>
+  </div>
+</div>
+
+<!-- ============ 通用 Modal / Drawer / Toast 容器 ============ -->
+<div class="overlay" id="overlay"></div>
+<div id="modalHost"></div>
+<div id="drawerHost"></div>
+<div class="toast-stack" id="toastStack"></div>
+
+<script>
+"use strict";
+/* ============================================================
+   Teaven SMS 用户中心 · 单文件应用（接入真实后端 API）
+   ============================================================ */
+window.TS = window.TS || {};
+
+/* ---------- 全局 Loading ---------- */
+function hideGlobalLoading() {
+  const el = document.getElementById('globalLoading');
+  if (el) { el.style.opacity = '0'; setTimeout(() => { el.style.display = 'none'; }, 300); }
+}
+
+/* ---------- API 客户端 ---------- */
+window.TS.api = {
+  token: localStorage.getItem('teaven-token'),
+  async req(method, path, body) {
+    const opts = { method, headers: {} };
+    if (body !== undefined && body !== null) {
+      opts.headers['Content-Type'] = 'application/json';
+      opts.body = JSON.stringify(body);
+    }
+    if (this.token) opts.headers['Authorization'] = 'Bearer ' + this.token;
+    const res = await fetch('/api' + path, opts);
+    if (res.status === 401) { window.TS.auth.logout(); throw new Error('未登录或登录已过期'); }
+    const json = await res.json();
+    if (json.code !== 0) throw new Error(json.message || '请求失败');
+    return json.data;
+  },
+  get(p) { return this.req('GET', p); },
+  post(p, b) { return this.req('POST', p, b); },
+  put(p, b) { return this.req('PUT', p, b); },
+  patch(p, b) { return this.req('PATCH', p, b); },
+  del(p) { return this.req('DELETE', p); },
+};
+
+/* ---------- 分层数据缓存 ---------- */
+window.TS.data = {
+  cache: {},
+  inflight: {},
+  preloadStarted: false,
+
+  query(params) {
+    const qs = new URLSearchParams();
+    Object.keys(params || {}).sort().forEach(k => {
+      const v = params[k];
+      if (v !== undefined && v !== null && v !== '' && v !== 'all') qs.set(k, v);
+    });
+    return qs.toString();
+  },
+
+  key(prefix, params) {
+    const qs = this.query(params);
+    return qs ? prefix + ':' + qs : prefix;
+  },
+
+  get(key, fetcher, force) {
+    if (!force && Object.prototype.hasOwnProperty.call(this.cache, key)) return Promise.resolve(this.cache[key]);
+    if (this.inflight[key]) return this.inflight[key];
+    this.inflight[key] = Promise.resolve().then(fetcher).then(data => {
+      this.cache[key] = data;
+      return data;
+    }).finally(() => { delete this.inflight[key]; });
+    return this.inflight[key];
+  },
+
+  invalidate(keys) {
+    (Array.isArray(keys) ? keys : [keys]).forEach(key => {
+      Object.keys(this.cache).forEach(k => { if (k === key || k.startsWith(key + ':')) delete this.cache[k]; });
+      Object.keys(this.inflight).forEach(k => { if (k === key || k.startsWith(key + ':')) delete this.inflight[k]; });
+    });
+  },
+
+  preload() {
+    if (this.preloadStarted) return;
+    this.preloadStarted = true;
+    Promise.allSettled([
+      this.loadStats(),
+      this.loadSignatures(),
+      this.loadTemplates(),
+      this.loadPublicTemplates(),
+      this.loadApiKeys(),
+      this.loadMessagesPage({ page: 1, pageSize: 10 }),
+      this.loadTransactionsPage({ page: 1, pageSize: 10 })
+    ]).catch(() => {});
+  },
+
+  loadStats(force) {
+    return this.get('stats', () => window.TS.api.get('/user/stats'), force);
+  },
+
+  loadSignatures(force) {
+    return this.get('signatures', () => window.TS.api.get('/user/signatures'), force);
+  },
+
+  loadTemplates(force) {
+    return this.get('templates', () => window.TS.api.get('/user/templates'), force);
+  },
+
+  loadPublicTemplates(force) {
+    return this.get('public-templates', () => window.TS.api.get('/user/templates/public'), force);
+  },
+
+  loadApiKeys(force) {
+    return this.get('api-keys', () => window.TS.api.get('/api-keys'), force);
+  },
+
+  loadMessagesPage(params, force) {
+    const p = { page: Number(params.page || 1), pageSize: Number(params.pageSize || 10), status: params.status || undefined };
+    const key = this.key('messages', p);
+    return this.get(key, () => window.TS.api.get('/user/messages?' + this.query(p)), force).then(data => {
+      this.prefetchMessages(p, data);
+      return data;
+    });
+  },
+
+  prefetchMessages(params, data) {
+    const page = Number(params.page || 1);
+    const pageSize = Number(params.pageSize || 10);
+    const total = Number(data && data.total || 0);
+    const totalPages = total > 0 ? Math.max(1, Math.ceil(total / pageSize)) : page + (((data && data.items) || []).length >= pageSize ? 1 : 0);
+    [page - 1, page + 1].forEach(nextPage => {
+      if (nextPage < 1 || nextPage > totalPages) return;
+      const next = { ...params, page: nextPage };
+      const key = this.key('messages', next);
+      if (this.cache[key] || this.inflight[key]) return;
+      this.get(key, () => window.TS.api.get('/user/messages?' + this.query(next))).catch(() => {});
+    });
+  },
+
+  loadTransactionsPage(params, force) {
+    const p = { page: Number(params.page || 1), pageSize: Number(params.pageSize || 10), type: params.type || undefined };
+    const key = this.key('transactions', p);
+    return this.get(key, () => window.TS.api.get('/user/transactions?' + this.query(p)), force).then(data => {
+      this.prefetchTransactions(p, data);
+      return data;
+    });
+  },
+
+  prefetchTransactions(params, data) {
+    const page = Number(params.page || 1);
+    const pageSize = Number(params.pageSize || 10);
+    const total = Number(data && data.total || 0);
+    const totalPages = total > 0 ? Math.max(1, Math.ceil(total / pageSize)) : page + (((data && data.items) || []).length >= pageSize ? 1 : 0);
+    [page - 1, page + 1].forEach(nextPage => {
+      if (nextPage < 1 || nextPage > totalPages) return;
+      const next = { ...params, page: nextPage };
+      const key = this.key('transactions', next);
+      if (this.cache[key] || this.inflight[key]) return;
+      this.get(key, () => window.TS.api.get('/user/transactions?' + this.query(next))).catch(() => {});
+    });
+  },
+
+  refreshAuthUser() {
+    return window.TS.api.get('/auth/me').then(user => {
+      window.TS.auth.user = user;
+      window.TS.auth.fillUserInfo();
+      return user;
+    });
+  }
+};
+
+/* ---------- 认证 ---------- */
+window.TS.auth = {
+  user: null,
+  async init() {
+    // 检查是否是模拟登录
+    const urlParams = new URLSearchParams(window.location.search);
+    const isImpersonate = urlParams.get('impersonate') === '1';
+    
+    if (isImpersonate) {
+      const impersonateToken = localStorage.getItem('impersonate_token');
+      const impersonateUser = localStorage.getItem('impersonate_user');
+      
+      if (impersonateToken && impersonateUser) {
+        window.TS.api.token = impersonateToken;
+        localStorage.setItem('teaven-token', impersonateToken);
+        localStorage.removeItem('impersonate_token');
+        localStorage.removeItem('impersonate_user');
+        
+        try {
+          this.user = await window.TS.api.get('/auth/me');
+          this.fillUserInfo();
+          this.hideLogin();
+          window.TS.app.init();
+          window.TS.toast('info', '模拟登录', `当前以 ${this.user.email} 身份登录`);
+          
+          // 清除 URL 参数
+          window.history.replaceState({}, document.title, '/user');
+          return;
+        } catch {
+          this.logout();
+          return;
+        }
+      }
+    }
+    
+    if (!window.TS.api.token) { this.showLogin(); return; }
+    try {
+      this.user = await window.TS.api.get('/auth/me');
+      this.fillUserInfo();
+      this.hideLogin();
+      window.TS.app.init();
+    } catch {
+      this.logout();
+    }
+  },
+  async login(email, password) {
+    try {
+      const data = await window.TS.api.post('/auth/login', { email, password });
+      window.TS.api.token = data.token;
+      localStorage.setItem('teaven-token', data.token);
+      this.user = await window.TS.api.get('/auth/me');
+      this.fillUserInfo();
+      this.hideLogin();
+      window.TS.app.init();
+      window.TS.toast('success', '登录成功', '欢迎回来');
+    } catch (err) {
+      const e = document.getElementById('loginError');
+      e.textContent = err.message;
+      e.classList.add('show');
+    }
+  },
+  async register(email, password) {
+    try {
+      const data = await window.TS.api.post('/auth/register', { email, password });
+      window.TS.api.token = data.token;
+      localStorage.setItem('teaven-token', data.token);
+      this.user = await window.TS.api.get('/auth/me');
+      this.fillUserInfo();
+      this.hideLogin();
+      window.TS.app.init();
+      window.TS.toast('success', '注册成功', '欢迎加入 Teaven SMS');
+    } catch (err) {
+      const e = document.getElementById('regError');
+      e.textContent = err.message;
+      e.classList.add('show');
+    }
+  },
+  logout() {
+    window.TS.api.token = null;
+    this.user = null;
+    if (window.TS.data) {
+      window.TS.data.cache = {};
+      window.TS.data.inflight = {};
+      window.TS.data.preloadStarted = false;
+    }
+    localStorage.removeItem('teaven-token');
+    this.showLogin();
+  },
+  fillUserInfo() {
+    const u = this.user;
+    const name = (u.email || 'U').split('@')[0];
+    const avatar = name.charAt(0).toUpperCase();
+    document.getElementById('sidebarUserName').textContent = name;
+    document.getElementById('sidebarUserRole').textContent = u.role === 'admin' ? '管理员' : '普通用户';
+    document.getElementById('sidebarAvatar').textContent = avatar;
+    document.getElementById('headerAvatar').textContent = avatar;
+    document.getElementById('dropdownUserName').textContent = name;
+    document.getElementById('dropdownUserEmail').textContent = u.email;
+    document.getElementById('headerBalance').textContent = '¥' + parseFloat(u.balance || '0').toFixed(2);
+  },
+  showLogin() {
+    hideGlobalLoading();
+    document.getElementById('loginWrap').style.display = 'flex';
+    document.getElementById('appShell').style.display = 'none';
+  },
+  hideLogin() {
+    hideGlobalLoading();
+    document.getElementById('loginWrap').style.display = 'none';
+    document.getElementById('appShell').style.display = 'flex';
+  },
+  bindLogin() {
+    document.querySelectorAll('.login-tab').forEach(t => t.onclick = () => {
+      document.querySelectorAll('.login-tab').forEach(x => x.classList.remove('active'));
+      t.classList.add('active');
+      document.querySelectorAll('.login-pane').forEach(p => p.classList.remove('active'));
+      document.getElementById('pane-' + t.dataset.tab).classList.add('active');
+    });
+    document.getElementById('loginSubmit').onclick = () => {
+      const email = document.getElementById('loginEmail').value.trim();
+      const password = document.getElementById('loginPassword').value;
+      if (!email || !password) return;
+      document.getElementById('loginError').classList.remove('show');
+      this.login(email, password);
+    };
+    document.getElementById('regSubmit').onclick = () => {
+      const email = document.getElementById('regEmail').value.trim();
+      const password = document.getElementById('regPassword').value;
+      if (!email || !password) return;
+      document.getElementById('regError').classList.remove('show');
+      this.register(email, password);
+    };
+  },
+};
+
+/* ---------- 状态映射 ---------- */
+// SMS 消息状态
+window.TS.statusMap = {
+  pending: { label: "发送中", cls: "info" },
+  queued: { label: "排队中", cls: "info" },
+  submitted: { label: "已提交", cls: "info" },
+  delivered: { label: "已送达", cls: "success" },
+  failed: { label: "失败", cls: "error" },
+  rejected: { label: "已拒绝", cls: "error" },
+  unknown: { label: "未知", cls: "neutral" },
+};
+// 签名 / 模板审核状态
+window.TS.reviewStatusMap = {
+  pending: { label: "审核中", cls: "warning" },
+  approved: { label: "已通过", cls: "success" },
+  rejected: { label: "已拒绝", cls: "error" },
+  disabled: { label: "已停用", cls: "neutral" },
+};
+// API Key 状态
+window.TS.keyStatusMap = {
+  active: { label: "启用", cls: "success" },
+  disabled: { label: "已停用", cls: "neutral" },
+};
+// 账单流水类型
+window.TS.txnTypeMap = {
+  recharge: { label: "充值", cls: "success" },
+  freeze: { label: "冻结", cls: "warning" },
+  charge: { label: "消费", cls: "error" },
+  refund: { label: "退款", cls: "info" },
+  adjust: { label: "调整", cls: "neutral" },
+};
+window.TS.tplTypeMap = {
+  verification: "验证码", notification: "通知", marketing: "营销", transactional: "事务"
+};
+
+/* ---------- 工具函数 ---------- */
+window.TS.fmt = {
+  money: n => "¥" + Math.abs(parseFloat(n || '0')).toFixed(4).replace(/\.?0+$/, m => m.includes(".") ? m : ""),
+  money2: n => "¥" + Math.abs(parseFloat(n || '0')).toFixed(2),
+  signed: n => (parseFloat(n || '0') > 0 ? "+" : "") + parseFloat(n || '0').toFixed(4).replace(/\.?0+$/, m => m.includes(".") ? m : ""),
+  num: n => Number(n || 0).toLocaleString("zh-CN"),
+  pct: n => Number(n || 0).toFixed(2) + "%",
+  date: s => s ? new Date(s).toLocaleString("zh-CN", { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }).replace(/\//g, '-') : '—',
+  esc: s => String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'),
+};
+
+window.TS.$ = (sel, root = document) => root.querySelector(sel);
+window.TS.$$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+window.TS.el = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; };
+window.TS.loading = (host) => { host.innerHTML = '<div class="loading-box"><i class="ri-loader-4-line"></i>加载中…</div>'; };
+window.TS.errorBox = (host, msg) => { host.innerHTML = `<div class="error-box"><i class="ri-error-warning-line"></i>${window.TS.fmt.esc(msg || '加载失败')}</div>`; };
+
+/* ---------- Toast ---------- */
+window.TS.toast = function(type, title, desc) {
+  const iconMap = { success: "ri-check-line", error: "ri-error-warning-line", info: "ri-information-line", warning: "ri-alert-line" };
+  const safeTitle = window.TS.fmt.esc(title);
+  const safeDesc = desc ? window.TS.fmt.esc(desc) : "";
+  const t = window.TS.el("div", "toast " + type,
+    `<i class="lead ${iconMap[type] || iconMap.info}"></i>
+     <div class="toast-content"><div class="toast-title">${safeTitle}</div>${safeDesc ? `<div class="toast-desc">${safeDesc}</div>` : ""}</div>`);
+  document.getElementById("toastStack").appendChild(t);
+  setTimeout(() => { t.classList.add("out"); setTimeout(() => t.remove(), 250); }, 3000);
+};
+
+/* ---------- Modal ---------- */
+window.TS.modal = function({ title, body, foot, width }) {
+  const host = document.getElementById("modalHost");
+  host.innerHTML = "";
+  const m = window.TS.el("div", "modal");
+  if (width) m.style.width = width;
+  m.innerHTML = `<div class="modal-head"><div class="modal-title">${title || ""}</div><button class="icon-btn" data-close><i class="ri-close-line" style="font-size:18px"></i></button></div><div class="modal-body">${body || ""}</div>${foot ? `<div class="modal-foot">${foot}</div>` : ""}`;
+  host.appendChild(m);
+  const overlay = document.getElementById("overlay");
+  overlay.classList.add("show");
+  requestAnimationFrame(() => m.classList.add("show"));
+  const close = () => { m.classList.remove("show"); overlay.classList.remove("show"); setTimeout(() => { host.innerHTML = ""; }, 250); };
+  m.querySelectorAll("[data-close]").forEach(b => b.onclick = close);
+  overlay.onclick = close;
+  return { close, root: m };
+};
+
+/* ---------- Drawer ---------- */
+window.TS.drawer = function({ title, body, foot, width }) {
+  const host = document.getElementById("drawerHost");
+  host.innerHTML = "";
+  const d = window.TS.el("div", "drawer");
+  if (width) d.style.width = width;
+  d.innerHTML = `<div class="drawer-head"><div class="drawer-title">${title || ""}</div><button class="icon-btn" data-close><i class="ri-close-line" style="font-size:18px"></i></button></div><div class="drawer-body">${body || ""}</div>${foot ? `<div class="drawer-foot">${foot}</div>` : ""}`;
+  host.appendChild(d);
+  const overlay = document.getElementById("overlay");
+  overlay.classList.add("show");
+  requestAnimationFrame(() => d.classList.add("show"));
+  const close = () => { d.classList.remove("show"); overlay.classList.remove("show"); setTimeout(() => { host.innerHTML = ""; }, 300); };
+  d.querySelectorAll("[data-close]").forEach(b => b.onclick = close);
+  overlay.onclick = close;
+  return { close, root: d };
+};
+
+/* ---------- 主题 ---------- */
+window.TS.theme = {
+  current: localStorage.getItem("teaven-theme") || "system",
+  apply(mode) {
+    let theme = mode;
+    if (mode === "system") theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", theme);
+    const icon = document.getElementById("themeIcon");
+    if (icon) icon.className = theme === "dark" ? "ri-moon-line" : "ri-sun-line";
+  },
+  set(mode) {
+    this.current = mode;
+    localStorage.setItem("teaven-theme", mode);
+    this.apply(mode);
+    window.TS.toast("info", "主题已切换", mode === "system" ? "跟随系统偏好" : (mode === "dark" ? "深色模式" : "浅色模式"));
+  },
+  init() {
+    this.apply(this.current);
+    window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { if (this.current === "system") this.apply("system"); });
+  }
+};
+
+/* ---------- 路由 ---------- */
+window.TS.router = {
+  routes: {
+    "#/overview": { title: "概览面板", crumb: "概览面板", render: (h) => window.TS.pages.overview(h) },
+    "#/send": { title: "发送短信", crumb: "发送短信", render: (h) => window.TS.pages.send(h) },
+    "#/signatures": { title: "签名管理", crumb: "签名管理", render: (h) => window.TS.pages.signatures(h) },
+    "#/templates": { title: "模板管理", crumb: "模板管理", render: (h) => window.TS.pages.templates(h) },
+    "#/messages": { title: "短信记录", crumb: "短信记录", render: (h) => window.TS.pages.messages(h) },
+    "#/api-keys": { title: "API Key", crumb: "API Key", render: (h) => window.TS.pages.apiKeys(h) },
+    "#/billing": { title: "账单中心", crumb: "账单中心", render: (h) => window.TS.pages.billing(h) },
+    "#/settings": { title: "个人设置", crumb: "个人设置", render: (h) => window.TS.pages.settings(h) }
+  },
+  charts: {},
+  go(hash) {
+    if (!this.routes[hash]) hash = "#/overview";
+    if (location.hash === hash) this.handle();
+    else location.hash = hash;
+  },
+  async handle(options) {
+    options = options || {};
+    const rawHash = location.hash || "#/overview";
+    const hash = this.routes[rawHash] ? rawHash : "#/overview";
+    const route = this.routes[hash];
+    Object.values(this.charts).forEach(c => { try { c.destroy(); } catch(e){} });
+    this.charts = {};
+    const host = document.getElementById("pageHost");
+    host.innerHTML = "";
+    window.TS.loading(host);
+    document.querySelectorAll(".nav-item").forEach(n => n.classList.toggle("active", n.dataset.route === hash));
+    document.getElementById("breadcrumb").innerHTML = `<i class="ri-home-4-line"></i><span>首页</span><i class="ri-arrow-right-s-line"></i><span class="crumb-current">${route.crumb}</span>`;
+    document.title = `${route.title} · Teaven SMS 用户中心`;
+    document.getElementById("aside").classList.remove("mobile-open");
+    document.getElementById("scrim").classList.remove("show");
+    if (!options.keepScroll) document.getElementById("main").scrollTop = 0;
+    try {
+      await route.render(host);
+    } catch (err) {
+      window.TS.errorBox(host, err.message);
+    }
+  },
+  async refreshCurrent() {
+    const hash = this.routes[location.hash] ? location.hash : "#/overview";
+    if (hash === "#/overview") {
+      window.TS.data.invalidate(['stats', 'messages']);
+      await this.handle({ keepScroll: true });
+    } else if (hash === "#/send") {
+      await Promise.allSettled([window.TS.data.loadSignatures(true), window.TS.data.loadTemplates(true)]);
+    } else if (hash === "#/signatures") {
+      window.TS.data.invalidate('signatures');
+      await this.handle({ keepScroll: true });
+    } else if (hash === "#/templates") {
+      window.TS.data.invalidate(['templates', 'public-templates']);
+      await this.handle({ keepScroll: true });
+    } else if (hash === "#/messages") {
+      window.TS.data.invalidate('messages');
+      await this.handle({ keepScroll: true });
+    } else if (hash === "#/api-keys") {
+      window.TS.data.invalidate('api-keys');
+      await this.handle({ keepScroll: true });
+    } else if (hash === "#/billing") {
+      window.TS.data.invalidate(['stats', 'transactions']);
+      await this.handle({ keepScroll: true });
+    } else if (hash === "#/settings") {
+      await window.TS.data.refreshAuthUser();
+    }
+  },
+  init() {
+    window.addEventListener("hashchange", () => this.handle());
+    this.handle();
+  }
+};
+
+window.TS.autoRefresh = {
+  lastAt: Date.now(),
+  bound: false,
+  init() {
+    if (this.bound) return;
+    this.bound = true;
+    document.addEventListener('visibilitychange', () => this.onVisible());
+    window.addEventListener('focus', () => this.onVisible());
+  },
+  onVisible() {
+    if (document.visibilityState && document.visibilityState !== 'visible') return;
+    const now = Date.now();
+    if (now - this.lastAt < 1000) return;
+    this.lastAt = now;
+    window.TS.router.refreshCurrent().catch(() => {});
+  }
+};
+
+/* ---------- 图表辅助 ---------- */
+window.TS.chart = {
+  themeColors() {
+    const s = getComputedStyle(document.documentElement);
+    return {
+      text: s.getPropertyValue("--text-muted").trim(),
+      grid: s.getPropertyValue("--border").trim(),
+      brand700: s.getPropertyValue("--brand-700").trim(),
+      brand500: s.getPropertyValue("--brand-500").trim(),
+      brand300: s.getPropertyValue("--brand-300").trim(),
+      success: s.getPropertyValue("--success").trim(),
+      warning: s.getPropertyValue("--warning").trim(),
+      error: s.getPropertyValue("--error").trim(),
+      info: s.getPropertyValue("--info").trim()
+    };
+  },
+  spark(canvasId, data, color) {
+    const ctx = document.getElementById(canvasId);
+    if (!ctx) return null;
+    const c = color || this.themeColors().brand500;
+    return new Chart(ctx, {
+      type: "line",
+      data: { labels: data.map((_, i) => i), datasets: [{ data, borderColor: c, borderWidth: 1.8, pointRadius: 0, pointHoverRadius: 0, tension: .4, fill: true, backgroundColor: (ctx2) => { const chart = ctx2.chart; const { ctx, chartArea } = chart; if (!chartArea) return c + "20"; const g = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom); g.addColorStop(0, c + "40"); g.addColorStop(1, c + "00"); return g; } }] },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { enabled: false } }, scales: { x: { display: false }, y: { display: false } }, elements: { line: { borderJoinStyle: "round" } } }
+    });
+  }
+};
+
+/* ============================================================
+   页面渲染
+   ============================================================ */
+window.TS.pages = {};
+
+/* ---------- 概览 ---------- */
+window.TS.pages.overview = async function(host) {
+  const s = await window.TS.data.loadStats();
+  const u = window.TS.auth.user;
+  const sm = window.TS.statusMap;
+  const balance = parseFloat(s.balance || '0');
+  const todaySent = s.todaySent || 0;
+  const successRate = s.successRate || 0;
+  const avgLatency = s.avgLatency || 0;
+  const todayCost = s.todayCost || 0;
+
+  const weekLabels = (s.weekTrend || []).map(d => d.date ? d.date.substring(5) : '');
+  const weekSent = (s.weekTrend || []).map(d => d.sent || 0);
+  const weekDelivered = (s.weekTrend || []).map(d => d.delivered || 0);
+  const weekFailed = (s.weekTrend || []).map(d => d.failed || 0);
+  const weekCost = (s.weekTrend || []).map(d => d.cost || 0);
+
+  const donutData = (s.upstreamDist || []).map((d, i) => ({
+    name: d.name,
+    value: d.count,
+    color: [this && this.cc ? this.cc.brand500 : '#A0522D', '#2F855A', '#2B6CB0', '#B7791F', '#C53030'][i % 5]
+  }));
+  const donutTotal = donutData.reduce((sum, d) => sum + d.value, 0);
+
+  host.innerHTML = `
+    <div class="page-header">
+      <div>
+        <div class="page-title">概览面板</div>
+        <div class="page-subtitle">${window.TS.fmt.esc(u.email)} · 数据更新于 ${window.TS.fmt.date(new Date().toISOString())}</div>
+      </div>
+      <div class="page-actions">
+        <button class="btn" onclick="window.TS.router.go('#/send')"><i class="ri-send-plane-line"></i> 发送短信</button>
+        <button class="btn btn-primary" onclick="window.TS.router.go('#/billing')"><i class="ri-add-line"></i> 充值</button>
+      </div>
+    </div>
+
+    <div class="stat-grid-overview" style="margin-bottom:16px">
+      <div class="balance-card">
+        <div class="balance-label">账户余额</div>
+        <div class="balance-amount num"><small>¥</small>${balance.toFixed(2)}</div>
+        <div class="balance-meta">
+          <span><i class="ri-vip-crown-line"></i> ${u.role === 'admin' ? '管理员' : '普通用户'}</span>
+          <span><i class="ri-time-line"></i> 注册于 ${window.TS.fmt.date(u.created_at)}</span>
+          <span><i class="ri-pulse-line"></i> 7 日消费 ¥${(s.weekCost || 0).toFixed(2)}</span>
+        </div>
+        <div class="balance-actions">
+          <button class="btn" onclick="window.TS.router.go('#/billing')"><i class="ri-wallet-3-line"></i> 充值</button>
+          <button class="btn" onclick="window.TS.router.go('#/billing')"><i class="ri-file-list-3-line"></i> 流水明细</button>
+        </div>
+      </div>
+      <div class="card card-pad" style="display:flex; flex-direction:column; justify-content:center">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px">
+          <div>
+            <div class="stat-label">今日发送量</div>
+            <div class="stat-value num">${window.TS.fmt.num(todaySent)}</div>
+          </div>
+          <div class="stat-icon brand"><i class="ri-send-plane-fill"></i></div>
+        </div>
+        <div class="stat-trend ${s.todaySentTrend >= 0 ? 'up' : 'down'}"><i class="ri-arrow-${s.todaySentTrend >= 0 ? 'up' : 'down'}-line"></i> ${Math.abs(s.todaySentTrend || 0)}% 较昨日</div>
+      </div>
+    </div>
+
+    <div class="grid grid-4" style="margin-bottom:16px">
+      <div class="card card-hover card-pad stat-card">
+        <div class="stat-head"><div class="stat-label">今日发送量</div><div class="stat-icon brand"><i class="ri-send-plane-fill"></i></div></div>
+        <div class="stat-value num">${window.TS.fmt.num(todaySent)}</div>
+        <div class="stat-trend ${s.todaySentTrend >= 0 ? 'up' : 'down'}"><i class="ri-arrow-${s.todaySentTrend >= 0 ? 'up' : 'down'}-line"></i> ${Math.abs(s.todaySentTrend || 0)}%</div>
+      </div>
+      <div class="card card-hover card-pad stat-card">
+        <div class="stat-head"><div class="stat-label">送达成功率</div><div class="stat-icon success"><i class="ri-checkbox-circle-line"></i></div></div>
+        <div class="stat-value num">${successRate}%</div>
+        <div class="stat-foot-text" style="margin-top:6px">今日送达 ${window.TS.fmt.num(s.todayDelivered || 0)} 条</div>
+      </div>
+      <div class="card card-hover card-pad stat-card">
+        <div class="stat-head"><div class="stat-label">平均到达时间</div><div class="stat-icon info"><i class="ri-timer-flash-line"></i></div></div>
+        <div class="stat-value num">${avgLatency}<small style="font-size:14px; color:var(--text-muted); font-weight:500"> 秒</small></div>
+        <div class="stat-foot-text" style="margin-top:6px">基于今日已送达消息</div>
+      </div>
+      <div class="card card-hover card-pad stat-card">
+        <div class="stat-head"><div class="stat-label">今日消费金额</div><div class="stat-icon warning"><i class="ri-coin-line"></i></div></div>
+        <div class="stat-value num">¥${todayCost.toFixed(2)}</div>
+        <div class="stat-foot-text" style="margin-top:6px">余额 ¥${balance.toFixed(2)}</div>
+      </div>
+    </div>
+
+    <div class="grid grid-2" style="margin-bottom:16px">
+      <div class="card">
+        <div class="card-header">
+          <div><div class="card-title">近 7 天发送趋势</div><div class="card-sub">送达 / 失败 数量对比</div></div>
+          <div class="seg" id="ovChartSeg"><div class="seg-item active" data-metric="count">数量</div><div class="seg-item" data-metric="rate">成功率</div></div>
+        </div>
+        <div class="card-pad"><div class="chart-wrap"><canvas id="ovChart"></canvas></div></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div><div class="card-title">上游通道分布</div><div class="card-sub">今日各上游发送占比</div></div></div>
+        <div class="card-pad" style="display:flex; gap:20px; align-items:center; flex-wrap:wrap">
+          <div style="position:relative; width:180px; height:180px"><canvas id="ovDonut"></canvas></div>
+          <div style="flex:1; min-width:160px" id="donutLegend"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div><div class="card-title">近期发送记录</div><div class="card-sub">最近 10 条消息</div></div>
+        <button class="btn btn-sm" onclick="window.TS.router.go('#/messages')">查看全部 <i class="ri-arrow-right-s-line"></i></button>
+      </div>
+      <div class="table-wrap" id="recentMsgWrap"><div class="loading-box"><i class="ri-loader-4-line"></i>加载中…</div></div>
+    </div>
+  `;
+
+  // 加载近期消息
+  try {
+    const msgData = await window.TS.data.loadMessagesPage({ page: 1, pageSize: 10 });
+    const wrap = document.getElementById('recentMsgWrap');
+    if (!msgData.items || msgData.items.length === 0) {
+      wrap.innerHTML = '<div class="empty"><i class="ri-inbox-line"></i>暂无发送记录</div>';
+    } else {
+      wrap.innerHTML = `<table class="tbl"><thead><tr><th>消息 ID</th><th>手机号</th><th>签名</th><th>模板</th><th>状态</th><th class="num">费用</th><th>创建时间</th></tr></thead><tbody>${msgData.items.map(m => `<tr><td class="mono" style="font-size:11px">${window.TS.fmt.esc(m.id)}</td><td class="mono">${window.TS.fmt.esc(m.to_number)}</td><td>${window.TS.fmt.esc(m.signature_name || '—')}</td><td>${window.TS.fmt.esc(m.template_name || '—')}</td><td><span class="badge ${sm[m.status]?.cls || 'neutral'}">${sm[m.status]?.label || m.status}</span></td><td class="num">${window.TS.fmt.money(m.price)}</td><td style="color:var(--text-muted); font-size:12px">${window.TS.fmt.date(m.created_at)}</td></tr>`).join('')}</tbody></table>`;
+    }
+  } catch (e) {
+    document.getElementById('recentMsgWrap').innerHTML = `<div class="empty"><i class="ri-error-warning-line"></i>${window.TS.fmt.esc(e.message)}</div>`;
+  }
+
+  // 主折线图
+  const cc = window.TS.chart.themeColors();
+  const renderOvChart = (metric) => {
+    if (window.TS.router.charts.ovMain) window.TS.router.charts.ovMain.destroy();
+    const ctx = document.getElementById("ovChart");
+    let datasets;
+    if (metric === "count") {
+      datasets = [
+        { label: "送达", data: weekDelivered, borderColor: cc.success, backgroundColor: cc.success + "20", fill: true, tension: .35, borderWidth: 2, pointRadius: 3, pointBackgroundColor: cc.success },
+        { label: "失败", data: weekFailed, borderColor: cc.error, backgroundColor: cc.error + "20", fill: true, tension: .35, borderWidth: 2, pointRadius: 3, pointBackgroundColor: cc.error }
+      ];
+    } else {
+      const rate = weekDelivered.map((d, i) => weekSent[i] > 0 ? +(d / weekSent[i] * 100).toFixed(2) : 0);
+      datasets = [{ label: "成功率", data: rate, borderColor: cc.brand500, backgroundColor: cc.brand500 + "20", fill: true, tension: .35, borderWidth: 2, pointRadius: 3, pointBackgroundColor: cc.brand500 }];
+    }
+    window.TS.router.charts.ovMain = new Chart(ctx, {
+      type: "line",
+      data: { labels: weekLabels, datasets },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        interaction: { mode: "index", intersect: false },
+        plugins: { legend: { display: true, position: "top", align: "end", labels: { boxWidth: 10, boxHeight: 10, font: { size: 12 }, color: cc.text } }, tooltip: { backgroundColor: cc.brand700, titleColor: "#fff", bodyColor: "#fff", padding: 10, borderRadius: 8 } },
+        scales: { x: { grid: { display: false }, ticks: { color: cc.text, font: { size: 11 } } }, y: { grid: { color: cc.grid }, ticks: { color: cc.text, font: { size: 11 } }, beginAtZero: metric === "count" } }
+      }
+    });
+  };
+  if (weekLabels.length > 0) {
+    renderOvChart("count");
+    document.querySelectorAll("#ovChartSeg .seg-item").forEach(it => {
+      it.onclick = () => {
+        document.querySelectorAll("#ovChartSeg .seg-item").forEach(x => x.classList.remove("active"));
+        it.classList.add("active");
+        renderOvChart(it.dataset.metric);
+      };
+    });
+  } else {
+    document.getElementById("ovChart").parentElement.innerHTML = '<div class="empty"><i class="ri-bar-chart-line"></i>近 7 天暂无数据</div>';
+  }
+
+  // Donut
+  if (donutData.length > 0 && donutTotal > 0) {
+    const colors = [cc.brand500, cc.success, cc.info, cc.warning, cc.error];
+    donutData.forEach((d, i) => d.color = colors[i % colors.length]);
+    window.TS.router.charts.donut = new Chart(document.getElementById("ovDonut"), {
+      type: "doughnut",
+      data: { labels: donutData.map(d => d.name), datasets: [{ data: donutData.map(d => d.value), backgroundColor: donutData.map(d => d.color), borderWidth: 0, hoverOffset: 6 }] },
+      options: {
+        responsive: true, maintainAspectRatio: false, cutout: "68%",
+        plugins: { legend: { display: false }, tooltip: { backgroundColor: cc.brand700, padding: 10, borderRadius: 8, callbacks: { label: c => ` ${c.label}: ${c.raw.toLocaleString()} (${(c.raw/donutTotal*100).toFixed(1)}%)` } } }
+      }
+    });
+    document.getElementById("donutLegend").innerHTML = donutData.map(d => `
+      <div style="display:flex; align-items:center; gap:8px; padding:6px 0; justify-content:space-between">
+        <div style="display:flex; align-items:center; gap:8px"><span style="width:10px; height:10px; border-radius:3px; background:${d.color}"></span><span style="font-size:13px">${window.TS.fmt.esc(d.name)}</span></div>
+        <span class="num" style="font-size:13px; font-weight:600">${(d.value/donutTotal*100).toFixed(1)}%</span>
+      </div>`).join("") + `<div class="divider"></div><div style="display:flex; justify-content:space-between; font-size:12px; color:var(--text-muted)"><span>总计</span><span class="num" style="font-weight:600">${donutTotal.toLocaleString()} 条</span></div>`;
+  } else {
+    document.getElementById("ovDonut").parentElement.innerHTML = '<div class="empty" style="font-size:13px">今日暂无数据</div>';
+    document.getElementById("donutLegend").innerHTML = '';
+  }
+};
+
+/* ---------- 发送短信 ---------- */
+window.TS.pages.send = async function(host) {
+  const [sigs, tpls] = await Promise.all([
+    window.TS.data.loadSignatures(),
+    window.TS.data.loadTemplates()
+  ]);
+  const approvedSigs = sigs.filter(s => s.status === 'approved');
+  const approvedTpls = tpls.filter(t => t.status === 'approved');
+
+  host.innerHTML = `
+    <div class="page-header">
+      <div><div class="page-title">发送短信</div><div class="page-subtitle">选择签名与模板发送短信</div></div>
+    </div>
+    <div class="card">
+      <div class="card-pad">
+        ${approvedSigs.length === 0 || approvedTpls.length === 0 ? `
+          <div class="notice warning"><i class="ri-alert-line"></i><div>发送短信需要至少一个已通过的签名和模板。请先前往 <a href="#/signatures" style="color:var(--brand-500)">签名管理</a> 和 <a href="#/templates" style="color:var(--brand-500)">模板管理</a> 申请。</div></div>
+        ` : `
+        <div class="grid grid-2" style="margin-bottom:0">
+          <div>
+            <div class="form-group">
+              <label class="form-label">手机号<span class="req">*</span></label>
+              <input class="input" id="singlePhone" placeholder="手机号" />
+              <div class="form-help">支持中国大陆手机号，需加 +86 前缀</div>
+              <div class="form-error">请输入有效的手机号（+86 开头共 14 位）</div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">签名<span class="req">*</span></label>
+              <select class="select" id="singleSig" style="width:100%">
+                ${approvedSigs.map(s => `<option value="${s.id}">${window.TS.fmt.esc(s.name)}${s.purpose ? ' · ' + window.TS.fmt.esc(s.purpose) : ''}</option>`).join("")}
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">模板<span class="req">*</span></label>
+              <select class="select" id="singleTpl" style="width:100%">
+                ${approvedTpls.map(t => `<option value="${t.id}" data-content="${window.TS.fmt.esc(t.content)}" data-vars='${window.TS.fmt.esc(t.variables_schema || '')}'>${window.TS.fmt.esc(t.name)} · ${window.TS.tplTypeMap[t.sms_type] || t.sms_type}</option>`).join("")}
+              </select>
+            </div>
+            <div class="form-group" id="varsGroup">
+              <label class="form-label">模板变量</label>
+              <div id="varsList"></div>
+            </div>
+          </div>
+          <div>
+            <div class="form-group">
+              <label class="form-label">内容预览</label>
+              <div class="sms-preview">
+                <div class="sms-preview-head"><span class="sms-preview-label">短信预览</span><span class="chip" id="smsLen">0 / 70 字</span></div>
+                <div class="sms-bubble" id="smsPreview">请在左侧选择签名与模板</div>
+              </div>
+            </div>
+            <div class="notice info" style="margin-bottom:16px"><i class="ri-information-line"></i><div>发送将从账户余额扣费，费用取决于通道价格。余额不足时发送将失败。</div></div>
+            <button class="btn btn-primary" id="sendSingleBtn" style="width:100%"><i class="ri-send-plane-fill"></i> 立即发送</button>
+          </div>
+        </div>`}
+      </div>
+    </div>
+  `;
+
+  if (approvedSigs.length === 0 || approvedTpls.length === 0) return;
+
+  const sigSelect = document.getElementById('singleSig');
+  const tplSelect = document.getElementById('singleTpl');
+
+  const updatePreview = () => {
+    const sigName = sigSelect.options[sigSelect.selectedIndex].text.split(' · ')[0];
+    const tplOpt = tplSelect.options[tplSelect.selectedIndex];
+    const content = tplOpt.dataset.content || '';
+    let vars = [];
+    try { const parsed = JSON.parse(tplOpt.dataset.vars || '{}'); if (parsed && typeof parsed === 'object') vars = Object.keys(parsed); } catch {}
+    // Also auto-detect from content
+    const detected = (content.match(/\{(\w+)\}/g) || []).map(s => s.slice(1, -1));
+    vars = [...new Set([...vars, ...detected])];
+
+    const varsList = document.getElementById('varsList');
+    varsList.innerHTML = vars.map(v => `
+      <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px">
+        <span class="tag-var">{${window.TS.fmt.esc(v)}}</span>
+        <input class="input var-input" data-var="${window.TS.fmt.esc(v)}" placeholder="${window.TS.fmt.esc(v)} 的值" style="flex:1" />
+      </div>`).join("");
+
+    const updateText = () => {
+      let text = content;
+      varsList.querySelectorAll(".var-input").forEach(i => {
+        text = text.replace(new RegExp("\\{" + i.dataset.var + "\\}", "g"), i.value || `{${i.dataset.var}}`);
+      });
+      const finalText = `【${sigName}】${text}`;
+      document.getElementById("smsPreview").innerHTML = window.TS.fmt.esc(finalText).replace(/【(.+?)】/, "<span class=\"sig\">【$1】</span>");
+      document.getElementById("smsLen").textContent = finalText.length + " / 70 字";
+    };
+    varsList.querySelectorAll(".var-input").forEach(inp => inp.oninput = updateText);
+    updateText();
+  };
+
+  sigSelect.onchange = updatePreview;
+  tplSelect.onchange = updatePreview;
+  updatePreview();
+
+  document.getElementById('sendSingleBtn').onclick = async () => {
+    const phone = document.getElementById('singlePhone').value.trim();
+    const phoneGroup = document.getElementById('singlePhone').parentElement;
+    if (!/^\+861\d{10}$/.test(phone)) { phoneGroup.classList.add('has-error'); return; }
+    phoneGroup.classList.remove('has-error');
+
+    const sigId = sigSelect.value;
+    const tplId = tplSelect.value;
+    const variables = {};
+    document.querySelectorAll('.var-input').forEach(i => { variables[i.dataset.var] = i.value; });
+
+    const btn = document.getElementById('sendSingleBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="ri-loader-4-line"></i> 发送中…';
+    try {
+      const result = await window.TS.api.post('/user/sms/send', { to: phone, signatureId: sigId, templateId: tplId, variables });
+      window.TS.data.invalidate(['stats', 'messages', 'transactions']);
+      window.TS.toast('success', '发送成功', `消息 ID：${result.messageId}，状态：${result.status}`);
+      document.getElementById('singlePhone').value = '';
+      document.querySelectorAll('.var-input').forEach(i => i.value = '');
+      window.TS.data.refreshAuthUser().catch(() => {});
+      updatePreview();
+    } catch (err) {
+      window.TS.toast('error', '发送失败', err.message);
+    }
+    btn.disabled = false;
+    btn.innerHTML = '<i class="ri-send-plane-fill"></i> 立即发送';
+  };
+};
+
+/* ---------- 签名管理 ---------- */
+window.TS.pages.signatures = async function(host) {
+  const sm = window.TS.reviewStatusMap;
+  let list = [];
+
+  const render = async () => {
+    window.TS.loading(host);
+    try {
+      list = await window.TS.data.loadSignatures();
+    } catch (e) { return window.TS.errorBox(host, e.message); }
+
+    host.innerHTML = `
+      <div class="page-header">
+        <div><div class="page-title">签名管理</div><div class="page-subtitle">管理短信签名，签名需经平台审核通过后方可使用</div></div>
+        <div class="page-actions"><button class="btn btn-primary" id="newSigBtn"><i class="ri-add-line"></i> 申请新签名</button></div>
+      </div>
+      <div class="grid grid-4" style="margin-bottom:16px">
+        <div class="card card-pad"><div class="stat-label">签名总数</div><div class="stat-value num">${list.length}</div></div>
+        <div class="card card-pad"><div class="stat-label">已通过</div><div class="stat-value num" style="color:var(--success)">${list.filter(s=>s.status==='approved').length}</div></div>
+        <div class="card card-pad"><div class="stat-label">审核中</div><div class="stat-value num" style="color:var(--warning)">${list.filter(s=>s.status==='pending').length}</div></div>
+        <div class="card card-pad"><div class="stat-label">已拒绝</div><div class="stat-value num" style="color:var(--error)">${list.filter(s=>s.status==='rejected').length}</div></div>
+      </div>
+      <div class="card">
+        <div class="table-wrap">
+          <table class="tbl">
+            <thead><tr><th>名称</th><th>用途</th><th>状态</th><th>创建时间</th><th>操作</th></tr></thead>
+            <tbody>
+              ${list.length === 0 ? `<tr><td colspan="5"><div class="empty"><i class="ri-inbox-line"></i>暂无签名，点击右上角申请</div></td></tr>` :
+                list.map(s => `<tr>
+                  <td style="font-weight:600">${window.TS.fmt.esc(s.name)}</td>
+                  <td style="color:var(--text-secondary)">${window.TS.fmt.esc(s.purpose || '—')}</td>
+                  <td><span class="badge ${sm[s.status]?.cls || 'neutral'}">${sm[s.status]?.label || s.status}</span>${s.status==='rejected' && s.reject_reason ? `<div style="font-size:11px; color:var(--error); margin-top:4px; max-width:200px">${window.TS.fmt.esc(s.reject_reason)}</div>` : ''}</td>
+                  <td style="color:var(--text-muted); font-size:12px">${window.TS.fmt.date(s.created_at)}</td>
+                  <td><div class="row-actions">
+                    <button class="icon-btn sig-edit" data-id="${s.id}" data-tip="编辑"><i class="ri-edit-line"></i></button>
+                  </div></td>
+                </tr>`).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
+
+    document.querySelectorAll('.sig-edit').forEach(b => b.onclick = () => openDrawer(b.dataset.id));
+    document.getElementById('newSigBtn').onclick = () => openDrawer(null);
+  };
+
+  const openDrawer = (id) => {
+    const s = id ? list.find(x => x.id === id) : null;
+    window.TS.drawer({
+      title: id ? '编辑签名' : '申请新签名',
+      body: `
+        <div class="form-group">
+          <label class="form-label">签名名称<span class="req">*</span></label>
+          <input class="input" id="sigName" value="${s ? window.TS.fmt.esc(s.name) : ''}" placeholder="签名名称" maxlength="16" />
+          <div class="form-help">2-16 个字符，建议使用企业简称或品牌名</div>
+          <div class="form-error">签名名称不能为空</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">使用用途</label>
+          <input class="input" id="sigPurpose" value="${s ? window.TS.fmt.esc(s.purpose || '') : ''}" placeholder="签名用途" />
+          <div class="form-help">描述签名使用场景，便于审核</div>
+        </div>
+        <div class="notice info"><i class="ri-information-line"></i><div>签名审核通常在 2 小时内完成，审核结果将通过邮件通知。</div></div>
+      `,
+      foot: `<button class="btn" data-close>取消</button><button class="btn btn-primary" id="saveSig"><i class="ri-check-line"></i> 提交${s ? '更新' : '审核'}</button>`
+    });
+    document.getElementById('saveSig').onclick = async () => {
+      const name = document.getElementById('sigName').value.trim();
+      const purpose = document.getElementById('sigPurpose').value.trim();
+      if (!name) { document.getElementById('sigName').parentElement.classList.add('has-error'); return; }
+      try {
+        if (s) {
+          await window.TS.api.put('/user/signatures/' + s.id, { name, purpose });
+          window.TS.toast('success', '已更新', `签名「${name}」已重新提交审核`);
+        } else {
+          await window.TS.api.post('/user/signatures', { name, purpose });
+          window.TS.toast('success', '已提交审核', `签名「${name}」已提交`);
+        }
+        document.querySelector('.drawer .icon-btn[data-close]')?.click();
+        window.TS.data.invalidate('signatures');
+        render();
+      } catch (err) {
+        window.TS.toast('error', '操作失败', err.message);
+      }
+    };
+  };
+
+  await render();
+};
+
+/* ---------- 模板管理 ---------- */
+window.TS.pages.templates = async function(host) {
+  const sm = window.TS.reviewStatusMap;
+  const tm = window.TS.tplTypeMap;
+  let list = [];
+  let activeTab = 'my'; // 'my' | 'public'
+
+  const render = async () => {
+    window.TS.loading(host);
+    try {
+      list = await window.TS.data.loadTemplates();
+    } catch (e) { return window.TS.errorBox(host, e.message); }
+
+    host.innerHTML = `
+      <div class="page-header">
+        <div><div class="page-title">模板管理</div><div class="page-subtitle">管理短信模板内容，模板审核通过后可用于发送</div></div>
+        <div class="page-actions">
+          <div style="display:flex;gap:8px">
+            <button class="btn ${activeTab==='my' ? 'btn-primary' : ''}" id="tabMy"><i class="ri-file-list-3-line"></i> 我的模板</button>
+            <button class="btn ${activeTab==='public' ? 'btn-primary' : ''}" id="tabPublic"><i class="ri-bookmark-3-line"></i> 公众模板</button>
+            <button class="btn btn-primary" id="newTplBtn"><i class="ri-add-line"></i> 申请新模板</button>
+          </div>
+        </div>
+      </div>
+      ${activeTab === 'my' ? renderMyTemplates() : await renderPublicTemplates()}
+    `;
+
+    document.getElementById('tabMy').onclick = () => { activeTab = 'my'; render(); };
+    document.getElementById('tabPublic').onclick = () => { activeTab = 'public'; render(); };
+    document.getElementById('newTplBtn').onclick = () => openDrawer(null);
+
+    if (activeTab === 'my') {
+      document.querySelectorAll('.tpl-view').forEach(b => b.onclick = () => {
+        const t = list.find(x => x.id === b.dataset.id);
+        const vars = [...new Set((t.content.match(/\{(\w+)\}/g) || []).map(s => s.slice(1, -1)))];
+        window.TS.modal({
+          title: '模板详情',
+          body: `
+            <div class="kv"><div class="kv-k">名称</div><div class="kv-v" style="font-weight:600">${window.TS.fmt.esc(t.name)}</div></div>
+            <div class="kv"><div class="kv-k">类型</div><div class="kv-v">${tm[t.sms_type] || t.sms_type}</div></div>
+            <div class="kv"><div class="kv-k">状态</div><div class="kv-v"><span class="badge ${sm[t.status]?.cls || 'neutral'}">${sm[t.status]?.label || t.status}</span></div></div>
+            <div class="kv"><div class="kv-k">变量</div><div class="kv-v">${vars.map(v=>`<span class="tag-var">{${v}}</span>`).join('')}</div></div>
+            <div class="form-label" style="margin-top:12px">模板内容</div>
+            <div class="sms-bubble" style="margin-top:6px">${window.TS.fmt.esc(t.content)}</div>
+            ${t.reject_reason ? `<div class="notice error" style="margin-top:12px"><i class="ri-error-warning-line"></i><div>拒绝原因：${window.TS.fmt.esc(t.reject_reason)}</div></div>` : ''}
+          `,
+          foot: `<button class="btn" data-close>关闭</button>`
+        });
+      });
+      document.querySelectorAll('.tpl-edit').forEach(b => b.onclick = () => openDrawer(b.dataset.id));
+    } else {
+      document.querySelectorAll('.adopt-btn').forEach(b => b.onclick = () => adoptPublic(b.dataset.id));
+    }
+  };
+
+  const renderMyTemplates = () => `
+    <div class="card">
+      <div class="table-wrap">
+        <table class="tbl">
+          <thead><tr><th>名称</th><th>类型</th><th>状态</th><th>变量</th><th>创建时间</th><th>操作</th></tr></thead>
+          <tbody>
+            ${list.length === 0 ? `<tr><td colspan="6"><div class="empty"><i class="ri-inbox-line"></i>暂无模板，点击右上角申请</div></td></tr>` :
+              list.map(t => {
+                let vars = [];
+                const detected = (t.content.match(/\{(\w+)\}/g) || []).map(s => s.slice(1, -1));
+                vars = [...new Set(detected)];
+                return `<tr>
+                  <td style="font-weight:600">${window.TS.fmt.esc(t.name)}</td>
+                  <td><span class="chip">${tm[t.sms_type] || t.sms_type}</span></td>
+                  <td><span class="badge ${sm[t.status]?.cls || 'neutral'}">${sm[t.status]?.label || t.status}</span>${t.status==='rejected' && t.reject_reason ? `<div style="font-size:11px; color:var(--error); margin-top:4px; max-width:200px">${window.TS.fmt.esc(t.reject_reason)}</div>` : ''}</td>
+                  <td>${vars.map(v => `<span class="tag-var">{${v}}</span>`).join('')}</td>
+                  <td style="color:var(--text-muted); font-size:12px">${window.TS.fmt.date(t.created_at)}</td>
+                  <td><div class="row-actions">
+                    <button class="icon-btn tpl-view" data-id="${t.id}" data-tip="查看"><i class="ri-eye-line"></i></button>
+                    <button class="icon-btn tpl-edit" data-id="${t.id}" data-tip="编辑"><i class="ri-edit-line"></i></button>
+                  </div></td>
+                </tr>`;
+              }).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+
+  const renderPublicTemplates = async () => {
+    let publicList = [];
+    try {
+      publicList = await window.TS.data.loadPublicTemplates();
+    } catch (e) { /* ignore */ }
+
+    if (publicList.length === 0) {
+      return `<div class="card"><div class="empty"><i class="ri-inbox-line"></i>暂无公众模板</div></div>`;
+    }
+
+    return `<div class="grid grid-2" style="gap:16px">
+      ${publicList.map(t => `
+        <div class="card" style="padding:16px">
+          <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:8px">
+            <div style="font-weight:600;font-size:15px">${window.TS.fmt.esc(t.name)}</div>
+            <span class="chip">${tm[t.sms_type] || t.sms_type}</span>
+          </div>
+          ${t.description ? `<div style="font-size:12px;color:var(--text-muted);margin-bottom:8px">${window.TS.fmt.esc(t.description)}</div>` : ''}
+          <div class="sms-bubble" style="margin:8px 0;min-height:auto">${window.TS.fmt.esc(t.content)}</div>
+          ${t.variables_schema ? `<div style="font-size:12px;color:var(--text-secondary);margin-bottom:8px">变量: ${Object.keys(JSON.parse(t.variables_schema)).map(v => `<code>{${v}}</code>`).join(', ')}</div>` : ''}
+          <button class="btn btn-primary adopt-btn" data-id="${t.id}" style="margin-top:8px"><i class="ri-download-line"></i> 采用此模板</button>
+        </div>
+      `).join('')}
+    </div>`;
+  };
+
+  const adoptPublic = async (id) => {
+    try {
+      await window.TS.api.post('/user/templates/public/' + id + '/adopt');
+      window.TS.toast('success', '已采用', '模板已添加到您的模板库，可直接使用');
+      window.TS.data.invalidate(['templates', 'public-templates']);
+      activeTab = 'my';
+      render();
+    } catch (e) {
+      window.TS.toast('error', '采用失败', e.message);
+    }
+  };
+
+  const openDrawer = (id) => {
+    const t = id ? list.find(x => x.id === id) : null;
+    window.TS.drawer({
+      title: id ? '编辑模板' : '申请新模板',
+      body: `
+        <div class="form-group">
+          <label class="form-label">模板名称<span class="req">*</span></label>
+          <input class="input" id="tplName" value="${t ? window.TS.fmt.esc(t.name) : ''}" placeholder="模板名称" />
+          <div class="form-error">模板名称不能为空</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">模板类型<span class="req">*</span></label>
+          <select class="select" id="tplType" style="width:100%">
+            <option value="">请选择类型</option>
+            <option value="verification" ${t && t.sms_type==='verification' ? 'selected':''}>验证码</option>
+            <option value="notification" ${t && t.sms_type==='notification' ? 'selected':''}>通知</option>
+            <option value="marketing" ${t && t.sms_type==='marketing' ? 'selected':''}>营销</option>
+            <option value="transactional" ${t && t.sms_type==='transactional' ? 'selected':''}>事务</option>
+          </select>
+          <div class="form-error">请选择模板类型</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">模板内容<span class="req">*</span></label>
+          <textarea class="input" id="tplContent" rows="5" placeholder="您的验证码是 {code}，5 分钟内有效。">${t ? window.TS.fmt.esc(t.content) : ''}</textarea>
+          <div class="form-help">使用 {变量名} 表示变量，营销类模板需包含退订指引</div>
+          <div class="form-error">模板内容不能为空</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">内容预览</label>
+          <div class="sms-bubble" id="tplPreview" style="min-height:60px">${t ? window.TS.fmt.esc(t.content) : '请输入模板内容'}</div>
+        </div>
+      `,
+      foot: `<button class="btn" data-close>取消</button><button class="btn btn-primary" id="saveTpl"><i class="ri-check-line"></i> 提交${t ? '更新' : '审核'}</button>`
+    });
+    document.getElementById('tplContent').oninput = (e) => { document.getElementById('tplPreview').textContent = e.target.value || '请输入模板内容'; };
+    document.getElementById('saveTpl').onclick = async () => {
+      const name = document.getElementById('tplName').value.trim();
+      const smsType = document.getElementById('tplType').value;
+      const content = document.getElementById('tplContent').value.trim();
+      let ok = true;
+      if (!name) { document.getElementById('tplName').parentElement.classList.add('has-error'); ok = false; }
+      if (!smsType) { document.getElementById('tplType').parentElement.classList.add('has-error'); ok = false; }
+      if (!content) { document.getElementById('tplContent').parentElement.classList.add('has-error'); ok = false; }
+      if (!ok) return;
+      try {
+        if (t) {
+          await window.TS.api.put('/user/templates/' + t.id, { name, content, smsType });
+          window.TS.toast('success', '已更新', `模板「${name}」已重新提交审核`);
+        } else {
+          await window.TS.api.post('/user/templates', { name, content, smsType });
+          window.TS.toast('success', '已提交审核', `模板「${name}」已提交`);
+        }
+        document.querySelector('.drawer .icon-btn[data-close]')?.click();
+        window.TS.data.invalidate('templates');
+        render();
+      } catch (err) {
+        window.TS.toast('error', '操作失败', err.message);
+      }
+    };
+  };
+
+  await render();
+};
+
+/* ---------- 短信记录 ---------- */
+window.TS.pages.messages = async function(host) {
+  const sm = window.TS.statusMap;
+  const state = { status: 'all', page: 1, pageSize: 10 };
+
+  const render = async () => {
+    window.TS.loading(host);
+    try {
+      const params = new URLSearchParams({ page: state.page, pageSize: state.pageSize });
+      if (state.status !== 'all') params.set('status', state.status);
+      const data = await window.TS.data.loadMessagesPage({ page: state.page, pageSize: state.pageSize, status: state.status });
+      const { items, total, page, pageSize } = data;
+      const totalPages = Math.max(1, Math.ceil(total / pageSize));
+      const start = (page - 1) * pageSize;
+
+      host.innerHTML = `
+        <div class="page-header">
+          <div><div class="page-title"><i class="ri-mail-list-3-line"></i> 短信记录</div><div class="page-subtitle">查询所有发送记录</div></div>
+          <div class="page-actions"><button class="btn btn-primary" onclick="window.TS.router.go('#/send')"><i class="ri-send-plane-line"></i> 发送短信</button></div>
+        </div>
+        <div class="card">
+          <div class="card-header" style="flex-wrap:wrap">
+            <div class="toolbar" style="margin:0; flex:1">
+              <select class="select" id="msgStatusFilter">
+                <option value="all" ${state.status==='all'?'selected':''}>全部状态</option>
+                <option value="delivered" ${state.status==='delivered'?'selected':''}>已送达</option>
+                <option value="pending" ${state.status==='pending'?'selected':''}>发送中</option>
+                <option value="queued" ${state.status==='queued'?'selected':''}>排队中</option>
+                <option value="failed" ${state.status==='failed'?'selected':''}>失败</option>
+                <option value="rejected" ${state.status==='rejected'?'selected':''}>已拒绝</option>
+              </select>
+            </div>
+            <div class="chip"><i class="ri-list-check"></i> 共 ${total} 条</div>
+          </div>
+          <div class="table-wrap">
+            <table class="tbl">
+              <thead><tr><th>消息 ID</th><th>手机号</th><th>签名</th><th>模板</th><th>状态</th><th class="num">费用</th><th>内容</th><th>创建时间</th></tr></thead>
+              <tbody>
+                ${items.length === 0 ? `<tr><td colspan="8"><div class="empty"><i class="ri-inbox-line"></i>暂无记录</div></td></tr>` :
+                  items.map(m => `<tr>
+                    <td class="mono" style="font-size:11px">${window.TS.fmt.esc(m.id)}</td>
+                    <td class="mono">${window.TS.fmt.esc(m.to_number)}</td>
+                    <td>${window.TS.fmt.esc(m.signature_name || '—')}</td>
+                    <td>${window.TS.fmt.esc(m.template_name || '—')}</td>
+                    <td><span class="badge ${sm[m.status]?.cls || 'neutral'}">${sm[m.status]?.label || m.status}</span>${m.error_message ? `<div style="font-size:11px; color:var(--error); margin-top:4px; max-width:140px">${window.TS.fmt.esc(m.error_message)}</div>` : ''}</td>
+                    <td class="num">${window.TS.fmt.money(m.price)}</td>
+                    <td style="max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--text-secondary); font-size:12px" title="${window.TS.fmt.esc(m.user_content)}">${window.TS.fmt.esc(m.user_content)}</td>
+                    <td style="color:var(--text-muted); font-size:12px">${window.TS.fmt.date(m.created_at)}</td>
+                  </tr>`).join('')}
+              </tbody>
+            </table>
+          </div>
+          ${total > 0 ? `<div style="padding:12px 16px"><div class="pagination">
+            <div class="pagination-info">第 ${start+1}-${Math.min(start+pageSize, total)} 条 / 共 ${total} 条</div>
+            <div class="pagination-controls">
+              <button class="page-btn" ${page===1?'disabled':''} id="msgPrev"><i class="ri-arrow-left-s-line"></i></button>
+              ${Array.from({length: totalPages}, (_, i) => i+1).filter(p => Math.abs(p - page) < 3 || p === 1 || p === totalPages).map((p, i, arr) => {
+                if (i > 0 && arr[i-1] !== p-1) return `<span style="color:var(--text-muted); padding:0 4px">…</span><button class="page-btn ${p===page?'active':''}" data-page="${p}">${p}</button>`;
+                return `<button class="page-btn ${p===page?'active':''}" data-page="${p}">${p}</button>`;
+              }).join('')}
+              <button class="page-btn" ${page===totalPages?'disabled':''} id="msgNext"><i class="ri-arrow-right-s-line"></i></button>
+            </div>
+          </div></div>` : ''}
+        </div>
+      `;
+
+      document.getElementById('msgStatusFilter').onchange = (e) => { state.status = e.target.value; state.page = 1; render(); };
+      const prevBtn = document.getElementById('msgPrev');
+      const nextBtn = document.getElementById('msgNext');
+      if (prevBtn) prevBtn.onclick = () => { if (state.page > 1) { state.page--; render(); } };
+      if (nextBtn) nextBtn.onclick = () => { state.page++; render(); };
+      document.querySelectorAll('[data-page]').forEach(b => b.onclick = () => { state.page = +b.dataset.page; render(); });
+    } catch (e) { window.TS.errorBox(host, e.message); }
+  };
+
+  await render();
+};
+
+/* ---------- API Key ---------- */
+window.TS.pages.apiKeys = async function(host) {
+  const sm = window.TS.keyStatusMap;
+  let list = [];
+
+  const render = async () => {
+    window.TS.loading(host);
+    try {
+      list = await window.TS.data.loadApiKeys();
+    } catch (e) { return window.TS.errorBox(host, e.message); }
+
+    host.innerHTML = `
+      <div class="page-header">
+        <div><div class="page-title">API Key 管理</div><div class="page-subtitle">管理用于调用 Teaven SMS API 的访问密钥</div></div>
+        <div class="page-actions"><button class="btn btn-primary" id="newKeyBtn"><i class="ri-add-line"></i> 创建 API Key</button></div>
+      </div>
+      <div class="grid grid-3" style="margin-bottom:16px">
+        <div class="card card-pad"><div class="stat-label">密钥总数</div><div class="stat-value num">${list.length}</div></div>
+        <div class="card card-pad"><div class="stat-label">启用中</div><div class="stat-value num" style="color:var(--success)">${list.filter(k=>k.status==='active').length}</div></div>
+        <div class="card card-pad"><div class="stat-label">已停用</div><div class="stat-value num" style="color:var(--text-muted)">${list.filter(k=>k.status==='disabled').length}</div></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div><div class="card-title">密钥列表</div><div class="card-sub">Secret 仅在创建时显示一次，请妥善保管</div></div></div>
+        <div class="table-wrap">
+          <table class="tbl">
+            <thead><tr><th>名称</th><th>AccessKey</th><th>状态</th><th>IP 白名单</th><th>最后使用</th><th>创建时间</th><th>操作</th></tr></thead>
+            <tbody>
+              ${list.length === 0 ? `<tr><td colspan="7"><div class="empty"><i class="ri-inbox-line"></i>暂无密钥</div></td></tr>` :
+                list.map(k => `<tr>
+                  <td style="font-weight:600">${window.TS.fmt.esc(k.name)}</td>
+                  <td class="mono">${window.TS.fmt.esc(k.access_key)}</td>
+                  <td><span class="badge ${sm[k.status]?.cls || 'neutral'}">${sm[k.status]?.label || k.status}</span></td>
+                  <td style="color:var(--text-secondary); font-size:12px">${window.TS.fmt.esc(k.ip_allowlist || '未设置')}</td>
+                  <td style="color:var(--text-muted); font-size:12px">${k.last_used_at ? window.TS.fmt.date(k.last_used_at) : '—'}</td>
+                  <td style="color:var(--text-muted); font-size:12px">${window.TS.fmt.date(k.created_at)}</td>
+                  <td><div class="row-actions">
+                    <button class="icon-btn key-copy" data-key="${window.TS.fmt.esc(k.access_key)}" data-tip="复制 AccessKey"><i class="ri-file-copy-line"></i></button>
+                    <button class="icon-btn key-toggle" data-id="${k.id}" data-status="${k.status}" data-tip="${k.status==='active'?'停用':'启用'}"><i class="ri-${k.status==='active'?'pause-circle':'play-circle'}-line"></i></button>
+                    <button class="icon-btn key-del" data-id="${k.id}" data-tip="删除"><i class="ri-delete-bin-line"></i></button>
+                  </div></td>
+                </tr>`).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card card-pad" style="margin-top:16px">
+        <div class="card-title" style="margin-bottom:12px">快速接入</div>
+        <div class="code-block" style="margin-bottom:8px">
+          <span>curl -X POST https://YOUR_DOMAIN/api/sms/send \<br>&nbsp;&nbsp;-H "X-Access-Key: YOUR_ACCESS_KEY" \<br>&nbsp;&nbsp;-H "X-Timestamp: $(date +%s)" \<br>&nbsp;&nbsp;-H "X-Nonce: $(uuidgen)" \<br>&nbsp;&nbsp;-H "X-Signature: HMAC_SIGNATURE" \<br>&nbsp;&nbsp;-H "Content-Type: application/json" \<br>&nbsp;&nbsp;-d '{"to":"YOUR_PHONE_NUMBER","signatureId":"YOUR_SIGNATURE_ID","templateId":"YOUR_TEMPLATE_ID","variables":{"code":"VARIABLE_VALUE"}}'</span>
+        </div>
+        <div class="form-help">调用 API 需使用 AccessKey + Secret 计算 HMAC 签名，详见 API 文档</div>
+      </div>
+    `;
+
+    document.querySelectorAll('.key-copy').forEach(b => b.onclick = () => { navigator.clipboard?.writeText(b.dataset.key); window.TS.toast('success', '已复制', 'AccessKey 已复制到剪贴板'); });
+    document.querySelectorAll('.key-toggle').forEach(b => b.onclick = async () => {
+      const newStatus = b.dataset.status === 'active' ? 'disabled' : 'active';
+      try {
+        await window.TS.api.patch('/api-keys/' + b.dataset.id + '/status', { status: newStatus });
+        window.TS.toast('info', newStatus === 'active' ? '已启用' : '已停用', '密钥状态已更新');
+        window.TS.data.invalidate('api-keys');
+        render();
+      } catch (err) { window.TS.toast('error', '操作失败', err.message); }
+    });
+    document.querySelectorAll('.key-del').forEach(b => b.onclick = () => {
+      const k = list.find(x => x.id === b.dataset.id);
+      window.TS.modal({
+        title: '删除 API Key',
+        body: `<div class="notice warning"><i class="ri-alert-line"></i><div>确认删除密钥「${window.TS.fmt.esc(k.name)}」？删除后使用该密钥的请求将立即失败。</div></div>`,
+        foot: `<button class="btn" data-close>取消</button><button class="btn btn-danger" id="confirmDelKey">确认删除</button>`
+      });
+      document.getElementById('confirmDelKey').onclick = async () => {
+        try {
+          await window.TS.api.del('/api-keys/' + k.id);
+          document.querySelector('.modal .icon-btn[data-close]')?.click();
+          window.TS.toast('success', '已删除', `密钥「${k.name}」已删除`);
+          window.TS.data.invalidate('api-keys');
+          render();
+        } catch (err) { window.TS.toast('error', '删除失败', err.message); }
+      };
+    });
+    document.getElementById('newKeyBtn').onclick = () => {
+      window.TS.drawer({
+        title: '创建 API Key',
+        body: `
+          <div class="form-group">
+            <label class="form-label">密钥名称<span class="req">*</span></label>
+            <input class="input" id="keyName" placeholder="密钥名称" />
+            <div class="form-help">用于标识该密钥的用途</div>
+            <div class="form-error">密钥名称不能为空</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">IP 白名单</label>
+            <textarea class="input" id="keyIps" rows="3" placeholder="每行一个 IP 或 CIDR，留空表示不限制"></textarea>
+            <div class="form-help">建议设置白名单以增强安全性</div>
+          </div>
+          <div class="notice warning"><i class="ri-alert-line"></i><div>创建后 Secret 仅显示一次，请立即复制并妥善保存。</div></div>
+        `,
+        foot: `<button class="btn" data-close>取消</button><button class="btn btn-primary" id="createKeyBtn"><i class="ri-key-line"></i> 创建密钥</button>`
+      });
+      document.getElementById('createKeyBtn').onclick = async () => {
+        const name = document.getElementById('keyName').value.trim();
+        if (!name) { document.getElementById('keyName').parentElement.classList.add('has-error'); return; }
+        const ipAllowlist = document.getElementById('keyIps').value.trim() || undefined;
+        try {
+          const result = await window.TS.api.post('/api-keys', { name, ipAllowlist });
+          document.querySelector('.drawer .icon-btn[data-close]')?.click();
+          window.TS.modal({
+            title: '密钥创建成功',
+            body: `
+              <div class="notice warning"><i class="ri-alert-line"></i><div>Secret 仅显示一次，请立即复制保存，关闭后将无法再次查看。</div></div>
+              <div class="form-label" style="margin-top:16px">AccessKey</div>
+              <div class="code-block"><span class="mono">${window.TS.fmt.esc(result.accessKey)}</span><span class="copy-btn" data-copy="${window.TS.fmt.esc(result.accessKey)}"><i class="ri-file-copy-line"></i></span></div>
+              <div class="form-label" style="margin-top:12px">Secret</div>
+              <div class="code-block"><span class="mono" style="color:var(--warning)">${window.TS.fmt.esc(result.secret)}</span><span class="copy-btn" data-copy="${window.TS.fmt.esc(result.secret)}"><i class="ri-file-copy-line"></i></span></div>
+            `,
+            foot: `<button class="btn btn-primary" data-close>我已保存</button>`
+          });
+          document.querySelectorAll('[data-copy]').forEach(b => b.onclick = () => { navigator.clipboard?.writeText(b.dataset.copy); window.TS.toast('success', '已复制', '内容已写入剪贴板'); });
+          window.TS.data.invalidate('api-keys');
+          render();
+        } catch (err) { window.TS.toast('error', '创建失败', err.message); }
+      };
+    };
+  };
+
+  await render();
+};
+
+/* ---------- 账单中心 ---------- */
+window.TS.pages.billing = async function(host) {
+  const sm = window.TS.txnTypeMap;
+  const state = { type: 'all', page: 1, pageSize: 10 };
+
+  const render = async () => {
+    window.TS.loading(host);
+    try {
+      const [stats, txnData] = await Promise.all([
+        window.TS.data.loadStats(),
+        window.TS.data.loadTransactionsPage({ page: state.page, pageSize: state.pageSize, type: state.type })
+      ]);
+      const balance = parseFloat(stats.balance || '0');
+      const { items, total, page, pageSize } = txnData;
+      const totalPages = Math.max(1, Math.ceil(total / pageSize));
+      const start = (page - 1) * pageSize;
+
+      host.innerHTML = `
+        <div class="page-header">
+          <div><div class="page-title">账单中心</div><div class="page-subtitle">账户余额、充值入口与流水明细</div></div>
+          <div class="page-actions"><button class="btn btn-primary" id="rechargeBtn"><i class="ri-add-line"></i> 充值</button></div>
+        </div>
+        <div class="stat-grid-overview" style="margin-bottom:16px">
+          <div class="balance-card">
+            <div class="balance-label">账户余额</div>
+            <div class="balance-amount num"><small>¥</small>${balance.toFixed(2)}</div>
+            <div class="balance-meta">
+              <span><i class="ri-arrow-up-line"></i> 累计充值 ¥${(stats.totalRecharge || 0).toFixed(2)}</span>
+              <span><i class="ri-arrow-down-line"></i> 累计消费 ¥${Math.abs(stats.totalCharge || 0).toFixed(2)}</span>
+            </div>
+            <div class="balance-actions"><button class="btn" id="rechargeBtn2"><i class="ri-wallet-3-line"></i> 立即充值</button></div>
+          </div>
+          <div class="grid" style="grid-template-columns:1fr 1fr; gap:12px">
+            <div class="card card-pad"><div class="stat-label">累计充值</div><div class="stat-value num" style="color:var(--success); font-size:22px">¥${(stats.totalRecharge || 0).toFixed(2)}</div></div>
+            <div class="card card-pad"><div class="stat-label">累计消费</div><div class="stat-value num" style="color:var(--error); font-size:22px">¥${Math.abs(stats.totalCharge || 0).toFixed(2)}</div></div>
+            <div class="card card-pad"><div class="stat-label">累计退款</div><div class="stat-value num" style="color:var(--info); font-size:22px">¥${(stats.totalRefund || 0).toFixed(2)}</div></div>
+            <div class="card card-pad"><div class="stat-label">7 日消费</div><div class="stat-value num" style="font-size:22px">¥${(stats.weekCost || 0).toFixed(2)}</div></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header" style="flex-wrap:wrap">
+            <div class="tabs" id="billTabs" style="margin:0; border:none">
+              <div class="tab ${state.type==='all'?'active':''}" data-type="all">全部</div>
+              <div class="tab ${state.type==='charge'?'active':''}" data-type="charge">消费</div>
+              <div class="tab ${state.type==='recharge'?'active':''}" data-type="recharge">充值</div>
+              <div class="tab ${state.type==='refund'?'active':''}" data-type="refund">退款</div>
+            </div>
+            <div class="chip"><i class="ri-list-check"></i> 共 ${total} 条</div>
+          </div>
+          <div class="table-wrap">
+            <table class="tbl">
+              <thead><tr><th>流水 ID</th><th>类型</th><th class="num">金额</th><th class="num">余额</th><th>备注</th><th>时间</th></tr></thead>
+              <tbody>
+                ${items.length === 0 ? `<tr><td colspan="6"><div class="empty"><i class="ri-inbox-line"></i>暂无流水记录</div></td></tr>` :
+                  items.map(t => `<tr>
+                    <td class="mono" style="font-size:11px">${window.TS.fmt.esc(t.id)}</td>
+                    <td><span class="badge ${sm[t.type]?.cls || 'neutral'}">${sm[t.type]?.label || t.type}</span></td>
+                    <td class="num" style="color:${parseFloat(t.amount)>0?'var(--success)':'var(--error)'}; font-weight:600">${parseFloat(t.amount)>0?'+':''}${window.TS.fmt.signed(t.amount)}</td>
+                    <td class="num">¥${parseFloat(t.balance_after || '0').toFixed(4).replace(/\.?0+$/, m=>m.includes(".")?m:"")}</td>
+                    <td style="color:var(--text-secondary)">${window.TS.fmt.esc(t.remark || '—')}</td>
+                    <td style="color:var(--text-muted); font-size:12px">${window.TS.fmt.date(t.created_at)}</td>
+                  </tr>`).join('')}
+              </tbody>
+            </table>
+          </div>
+          ${total > 0 ? `<div style="padding:12px 16px"><div class="pagination">
+            <div class="pagination-info">第 ${start+1}-${Math.min(start+pageSize, total)} 条 / 共 ${total} 条</div>
+            <div class="pagination-controls">
+              <button class="page-btn" ${page===1?'disabled':''} id="billPrev"><i class="ri-arrow-left-s-line"></i></button>
+              ${Array.from({length: totalPages}, (_, i) => i+1).filter(p => Math.abs(p - page) < 3 || p === 1 || p === totalPages).map((p, i, arr) => {
+                if (i > 0 && arr[i-1] !== p-1) return `<span style="color:var(--text-muted); padding:0 4px">…</span><button class="page-btn ${p===page?'active':''}" data-page="${p}">${p}</button>`;
+                return `<button class="page-btn ${p===page?'active':''}" data-page="${p}">${p}</button>`;
+              }).join('')}
+              <button class="page-btn" ${page===totalPages?'disabled':''} id="billNext"><i class="ri-arrow-right-s-line"></i></button>
+            </div>
+          </div></div>` : ''}
+        </div>
+      `;
+
+      document.querySelectorAll('#billTabs .tab').forEach(t => t.onclick = () => { state.type = t.dataset.type; state.page = 1; render(); });
+      const billPrev = document.getElementById('billPrev');
+      const billNext = document.getElementById('billNext');
+      if (billPrev) billPrev.onclick = () => { if (state.page > 1) { state.page--; render(); } };
+      if (billNext) billNext.onclick = () => { state.page++; render(); };
+      document.querySelectorAll('[data-page]').forEach(b => b.onclick = () => { state.page = +b.dataset.page; render(); });
+
+      const openRecharge = () => {
+        window.TS.modal({
+          title: '账户充值',
+          body: `
+            <div class="form-group">
+              <label class="form-label">充值金额<span class="req">*</span></label>
+              <div class="input-group"><input class="input" id="rechargeAmount" type="number" placeholder="请输入金额" value="500" /><span class="input-suffix">元</span></div>
+              <div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap">
+                <button class="btn btn-sm" data-amt="100">¥100</button>
+                <button class="btn btn-sm" data-amt="500">¥500</button>
+                <button class="btn btn-sm" data-amt="1000">¥1,000</button>
+                <button class="btn btn-sm" data-amt="5000">¥5,000</button>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">支付方式</label>
+              <div class="radio-row inline">
+                <label class="radio-item"><input type="radio" name="pay" checked /> 支付宝</label>
+                <label class="radio-item"><input type="radio" name="pay" /> 微信支付</label>
+                <label class="radio-item"><input type="radio" name="pay" /> 对公转账</label>
+              </div>
+            </div>
+            <div class="notice info"><i class="ri-information-line"></i><div>充值金额实时到账。</div></div>
+          `,
+          foot: `<button class="btn" data-close>取消</button><button class="btn btn-primary" id="confirmRecharge"><i class="ri-check-line"></i> 确认充值</button>`
+        });
+        document.querySelectorAll('[data-amt]').forEach(b => b.onclick = () => { document.getElementById('rechargeAmount').value = b.dataset.amt; });
+        document.getElementById('confirmRecharge').onclick = async () => {
+          const amt = parseFloat(document.getElementById('rechargeAmount').value);
+          if (!amt || amt <= 0) { window.TS.toast('error', '金额无效', '请输入正确的充值金额'); return; }
+          const method = document.querySelector('input[name="pay"]:checked')?.parentElement?.textContent?.trim() || '支付宝';
+          try {
+            const result = await window.TS.api.post('/user/recharge', { amount: amt, method });
+            document.querySelector('.modal .icon-btn[data-close]')?.click();
+            window.TS.toast('success', '充值成功', `已充值 ¥${amt.toFixed(2)}，余额更新为 ¥${parseFloat(result.balance).toFixed(2)}`);
+            window.TS.data.invalidate(['stats', 'transactions']);
+            await window.TS.data.refreshAuthUser();
+            render();
+          } catch (err) { window.TS.toast('error', '充值失败', err.message); }
+        };
+      };
+      document.getElementById('rechargeBtn').onclick = openRecharge;
+      document.getElementById('rechargeBtn2').onclick = openRecharge;
+    } catch (e) { window.TS.errorBox(host, e.message); }
+  };
+
+  await render();
+};
+
+/* ---------- 个人设置 ---------- */
+window.TS.pages.settings = async function(host) {
+  const u = window.TS.auth.user;
+  const balance = parseFloat(u.balance || '0');
+  const name = (u.email || 'U').split('@')[0];
+
+  host.innerHTML = `
+    <div class="page-header">
+      <div><div class="page-title">个人设置</div><div class="page-subtitle">管理账户安全与基本信息</div></div>
+    </div>
+    <div class="grid grid-2">
+      <div class="card">
+        <div class="card-header"><div><div class="card-title">账户信息</div><div class="card-sub">基本信息与联系方式</div></div></div>
+        <div class="card-pad">
+          <div style="display:flex; align-items:center; gap:16px; margin-bottom:20px">
+            <div class="avatar" style="width:56px; height:56px; font-size:22px">${name.charAt(0).toUpperCase()}</div>
+            <div>
+              <div style="font-size:16px; font-weight:600">${window.TS.fmt.esc(name)}</div>
+              <div style="font-size:12px; color:var(--text-muted)">${window.TS.fmt.esc(u.email)}</div>
+            </div>
+          </div>
+          <div class="kv"><div class="kv-k">用户 ID</div><div class="kv-v mono" style="font-size:11px">${window.TS.fmt.esc(u.id)}</div></div>
+          <div class="kv"><div class="kv-k">邮箱</div><div class="kv-v">${window.TS.fmt.esc(u.email)}</div></div>
+          <div class="kv"><div class="kv-k">角色</div><div class="kv-v">${u.role === 'admin' ? '管理员' : '普通用户'}</div></div>
+          <div class="kv"><div class="kv-k">状态</div><div class="kv-v"><span class="badge success">${u.status === 'active' ? '正常' : u.status}</span></div></div>
+          <div class="kv"><div class="kv-k">余额</div><div class="kv-v num" style="font-weight:600">¥${balance.toFixed(2)}</div></div>
+          <div class="kv"><div class="kv-k">注册时间</div><div class="kv-v">${window.TS.fmt.date(u.created_at)}</div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><div><div class="card-title">修改密码</div><div class="card-sub">建议定期更换以保障账户安全</div></div></div>
+        <div class="card-pad">
+          <div class="form-group">
+            <label class="form-label">当前密码<span class="req">*</span></label>
+            <input class="input" type="password" id="oldPwd" placeholder="请输入当前密码" />
+            <div class="form-error">请输入当前密码</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">新密码<span class="req">*</span></label>
+            <input class="input" type="password" id="newPwd" placeholder="至少 8 位" />
+            <div class="form-help">至少 8 位</div>
+            <div class="form-error">密码需至少 8 位</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">确认新密码<span class="req">*</span></label>
+            <input class="input" type="password" id="confirmPwd" placeholder="再次输入新密码" />
+            <div class="form-error">两次密码不一致</div>
+          </div>
+          <button class="btn btn-primary" id="changePwd"><i class="ri-lock-line"></i> 更新密码</button>
+        </div>
+      </div>
+
+      <div class="card" style="grid-column:1/-1">
+        <div class="card-header"><div><div class="card-title">API 接入信息</div><div class="card-sub">调用 SMS API 所需的认证信息</div></div></div>
+        <div class="card-pad">
+          <div class="notice info"><i class="ri-information-line"></i><div>调用 API 需使用 AccessKey + Secret 计算 HMAC-SHA256 签名。请在 <a href="#/api-keys" style="color:var(--brand-500)">API Key 管理</a> 创建密钥。</div></div>
+          <div class="kv" style="margin-top:12px"><div class="kv-k">API 地址</div><div class="kv-v mono">/api/sms/send</div></div>
+          <div class="kv"><div class="kv-k">认证方式</div><div class="kv-v">HMAC-SHA256 签名</div></div>
+          <div class="kv"><div class="kv-k">请求头</div><div class="kv-v mono" style="font-size:11px">X-Access-Key, X-Timestamp, X-Nonce, X-Signature</div></div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('changePwd').onclick = async () => {
+    const oldP = document.getElementById('oldPwd').value;
+    const newP = document.getElementById('newPwd').value;
+    const conP = document.getElementById('confirmPwd').value;
+    let ok = true;
+    const oldG = document.getElementById('oldPwd').parentElement;
+    const newG = document.getElementById('newPwd').parentElement;
+    const conG = document.getElementById('confirmPwd').parentElement;
+    [oldG, newG, conG].forEach(g => g.classList.remove('has-error'));
+    if (!oldP) { oldG.classList.add('has-error'); ok = false; }
+    if (newP.length < 8) { newG.classList.add('has-error'); ok = false; }
+    if (newP !== conP) { conG.classList.add('has-error'); ok = false; }
+    if (!ok) return;
+    const btn = document.getElementById('changePwd');
+    btn.disabled = true;
+    try {
+      await window.TS.api.put('/user/password', { oldPassword: oldP, newPassword: newP });
+      document.getElementById('oldPwd').value = '';
+      document.getElementById('newPwd').value = '';
+      document.getElementById('confirmPwd').value = '';
+      window.TS.toast('success', '密码已更新', '下次登录请使用新密码');
+    } catch (err) {
+      window.TS.toast('error', '更新失败', err.message);
+    }
+    btn.disabled = false;
+  };
+};
+
+/* ============================================================
+   应用初始化
+   ============================================================ */
+window.TS.app = {
+  init() {
+    // 主题
+    window.TS.theme.init();
+
+    // 数据预加载与聚焦刷新
+    window.TS.data.preload();
+    window.TS.autoRefresh.init();
+
+    // 折叠侧边栏
+    document.getElementById('collapseBtn').onclick = () => {
+      if (window.innerWidth < 1024) {
+        document.getElementById('aside').classList.toggle('mobile-open');
+        document.getElementById('scrim').classList.toggle('show');
+      } else {
+        document.getElementById('aside').classList.toggle('collapsed');
+      }
+    };
+
+    // 汉堡菜单
+    document.getElementById('hamburger').onclick = () => {
+      document.getElementById('aside').classList.toggle('mobile-open');
+      document.getElementById('scrim').classList.toggle('show');
+    };
+    document.getElementById('scrim').onclick = () => {
+      document.getElementById('aside').classList.remove('mobile-open');
+      document.getElementById('scrim').classList.remove('show');
+    };
+
+    // 导航点击
+    window.TS.$$('.nav-item').forEach(n => n.onclick = () => window.TS.router.go(n.dataset.route));
+
+    // 主题下拉
+    const themeDropdown = document.getElementById('themeDropdown');
+    document.getElementById('themeBtn').onclick = (e) => {
+      e.stopPropagation();
+      themeDropdown.classList.toggle('open');
+      document.getElementById('userDropdown').classList.remove('open');
+    };
+    themeDropdown.querySelectorAll('[data-theme-set]').forEach(it => it.onclick = () => {
+      window.TS.theme.set(it.dataset.themeSet);
+      themeDropdown.classList.remove('open');
+    });
+
+    // 用户下拉
+    const userDropdown = document.getElementById('userDropdown');
+    userDropdown.querySelector('button').onclick = (e) => {
+      e.stopPropagation();
+      userDropdown.classList.toggle('open');
+      themeDropdown.classList.remove('open');
+    };
+    userDropdown.querySelectorAll('.dropdown-item[data-route]').forEach(it => it.onclick = () => {
+      window.TS.router.go(it.dataset.route);
+      userDropdown.classList.remove('open');
+    });
+    document.getElementById('logoutBtn').onclick = () => {
+      userDropdown.classList.remove('open');
+      window.TS.modal({
+        title: '确认退出登录',
+        body: `<div class="notice warning"><i class="ri-alert-line"></i><div>退出后需重新登录才能继续使用 Teaven SMS 用户中心。</div></div>`,
+        foot: `<button class="btn" data-close>取消</button><button class="btn btn-danger" id="confirmLogout">确认退出</button>`
+      });
+      document.getElementById('confirmLogout').onclick = () => {
+        document.querySelector('.modal .icon-btn[data-close]')?.click();
+        window.TS.auth.logout();
+      };
+    };
+
+    // 点击外部关闭下拉
+    document.addEventListener('click', (e) => {
+      if (!themeDropdown.contains(e.target)) themeDropdown.classList.remove('open');
+      if (!userDropdown.contains(e.target)) userDropdown.classList.remove('open');
+    });
+
+    // 用户菜单（侧边栏）
+    document.getElementById('userMini').onclick = () => window.TS.router.go('#/settings');
+
+    // 路由
+    window.TS.router.init();
+  }
+};
+
+/* ---------- 启动 ---------- */
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    window.TS.auth.bindLogin();
+    window.TS.auth.init();
+  });
+} else {
+  window.TS.auth.bindLogin();
+  window.TS.auth.init();
+}
+
+</script>
+</body>
+</html>

@@ -1,0 +1,46 @@
+name = "teaven-sms"
+main = "src/index.ts"
+compatibility_date = "2024-06-20"
+compatibility_flags = ["nodejs_compat"]
+
+[build]
+command = "node scripts/build-pages.js"
+
+[vars]
+API_BASE_URL = "https://sms.teaven.io"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "teaven-sms"
+database_id = "dc45dfac-c597-445f-a4b2-3f0cde699e41"
+
+[[kv_namespaces]]
+binding = "KV"
+id = "f62d0ca1c97f4006a4521bbc510bf469"
+
+[[queues.producers]]
+binding = "SMS_SEND_QUEUE"
+queue = "teaven-sms-send"
+
+[[queues.producers]]
+binding = "SMS_RECEIPT_QUEUE"
+queue = "teaven-sms-receipt"
+
+[[queues.consumers]]
+queue = "teaven-sms-send"
+max_batch_size = 10
+max_batch_timeout = 5
+
+[[queues.consumers]]
+queue = "teaven-sms-receipt"
+max_batch_size = 20
+max_batch_timeout = 10
+
+# ---- Durable Objects：后台 WebSocket 推送广播中心 ----
+[[durable_objects.bindings]]
+name = "MESSAGE_HUB"
+class_name = "MessageHub"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["MessageHub"]

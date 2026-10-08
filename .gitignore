@@ -1,0 +1,15 @@
+node_modules/
+.wrangler/
+.dev.vars
+.env
+dist/
+# 生成物
+src/gen/pages.ts
+worker-generated.d.ts
+# 本地编辑器/agent 状态
+.mnemon/
+.trae/
+.codebuddy/
+.workbuddy/
+# 损坏的 .git 备份
+.git.corrupt-*
